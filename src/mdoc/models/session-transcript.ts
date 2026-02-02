@@ -14,11 +14,14 @@ import { Oid4vpDcApiHandoverInfo, type Oid4vpDcApiHandoverInfoOptions } from './
 import { Oid4vpDraft18Handover } from './oid4vp-draft18-handover'
 import { Oid4vpHandover } from './oid4vp-handover'
 import { Oid4vpHandoverInfo, type Oid4vpHandoverInfoOptions } from './oid4vp-handover-info'
+import { Oid4vpIaeHandover } from './oid4vp-iae-handover'
+import { Oid4vpIaeHandoverInfo, type Oid4vpIaeHandoverInfoOptions } from './oid4vp-iae-handover-info'
 import { QrHandover } from './qr-handover'
 
 const supportedHandoverStructures = [
   Oid4vpHandover,
   Oid4vpDcApiHandover,
+  Oid4vpIaeHandover,
   NfcHandover,
   QrHandover,
   Oid4vpDraft18Handover,
@@ -157,6 +160,13 @@ export class SessionTranscript extends CborStructure<
   public static async forOid4VpDcApi(options: Oid4vpDcApiHandoverInfoOptions, ctx: Pick<MdocContext, 'crypto'>) {
     const info = Oid4vpDcApiHandoverInfo.create(options)
     const handover = await Oid4vpDcApiHandover.create({ oid4vpDcApiHandoverInfo: info }, ctx)
+
+    return this.fromDecodedStructure({ deviceEngagement: null, eReaderKey: null, handover })
+  }
+
+  public static async forOid4VpIae(options: Oid4vpIaeHandoverInfoOptions, ctx: Pick<MdocContext, 'crypto'>) {
+    const info = Oid4vpIaeHandoverInfo.create(options)
+    const handover = await Oid4vpIaeHandover.create({ oid4vpIaeHandoverInfo: info }, ctx)
 
     return this.fromDecodedStructure({ deviceEngagement: null, eReaderKey: null, handover })
   }

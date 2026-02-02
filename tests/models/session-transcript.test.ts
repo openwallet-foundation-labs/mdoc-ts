@@ -38,6 +38,21 @@ describe('session transcript', () => {
     )
   })
 
+  test('calculate SessionTranscript forOid4VpIae against OpenID4VP test vector', async () => {
+    const sessionTranscript = await SessionTranscript.forOid4VpIae(
+      {
+        interactiveAuthorizationEndpoint: 'https://example.com/iae',
+        nonce: 'exc7gBkxjx1rdc9udRrveKvSsJIq80avlXeLHhGwqtA',
+        jwkThumbprint: Buffer.from('4283ec927ae0f208daaa2d026a814f2b22dca52cf85ffa8f3f8626c6bd669047', 'hex'),
+      },
+      mdocContext
+    )
+
+    expect(Buffer.from(sessionTranscript.encode()).toString('hex')).toEqual(
+      '83f6f682754f70656e49443456434949414548616e646f7665725820df679426cc1bf8996e8eb549ee078815a87a97c5e95c1c5a8ec39eedca28a838'
+    )
+  })
+
   test('calculateSessionTranscriptBytesForOid4Vp against OpenID4VP test vector', async () => {
     const sessionTranscript = await SessionTranscript.forOid4Vp(
       {
