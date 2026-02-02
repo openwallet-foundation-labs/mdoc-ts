@@ -71,8 +71,8 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
-  '@babel/runtime@7.28.4':
-    resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
+  '@babel/runtime@7.28.6':
+    resolution: {integrity: sha512-05WQkdpL9COIMz4LjTxGpPNCdlpyimKppYNoJ5Di5EUObifl8t4tuLuUBBZEpoLYOmfvIWrsp9fCl0HoPRVTdA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/types@8.0.0-beta.4':
@@ -882,8 +882,8 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
-  get-tsconfig@4.13.0:
-    resolution: {integrity: sha512-1VKTZJCwBrvbd+Wn3AOgQP/2Av+TfTCOlE4AcRJE72W1ksZXbAx8PPBR9RzgTeSPzlPMHrbANMH3LbltH73wxQ==}
+  get-tsconfig@4.13.1:
+    resolution: {integrity: sha512-EoY1N2xCn44xU6750Sx7OjOIT59FkmstNc3X6y5xpz7D5cBtZRe/3pSlTkDJgqsOk3WwZPkWfonhhUJfttQo3w==}
 
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
@@ -1094,8 +1094,8 @@ packages:
     resolution: {integrity: sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
 
-  rolldown-plugin-dts@0.21.7:
-    resolution: {integrity: sha512-u6mHPTxLzC/eU3hbFqu1Hd47if1zXITvNtbro5PRVqMe3tLzUkdeur87wRg8Y/bX5PYUUtPuGO815uHp8zi9uQ==}
+  rolldown-plugin-dts@0.21.8:
+    resolution: {integrity: sha512-czOQoe6eZpRKCv9P+ijO/v4A2TwQjASAV7qezUxRZSua06Yb2REPIZv/mbfXiZDP1ZfI7Ez7re7qfK9F9u0Epw==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
       '@ts-macro/tsc': ^0.3.6
@@ -1376,7 +1376,7 @@ snapshots:
     dependencies:
       '@babel/types': 8.0.0-beta.4
 
-  '@babel/runtime@7.28.4': {}
+  '@babel/runtime@7.28.6': {}
 
   '@babel/types@8.0.0-beta.4':
     dependencies:
@@ -1697,14 +1697,14 @@ snapshots:
 
   '@manypkg/find-root@1.1.0':
     dependencies:
-      '@babel/runtime': 7.28.4
+      '@babel/runtime': 7.28.6
       '@types/node': 12.20.55
       find-up: 4.1.0
       fs-extra: 8.1.0
 
   '@manypkg/get-packages@1.1.3':
     dependencies:
-      '@babel/runtime': 7.28.4
+      '@babel/runtime': 7.28.6
       '@changesets/types': 4.1.0
       '@manypkg/find-root': 1.1.0
       fs-extra: 8.1.0
@@ -2175,7 +2175,7 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  get-tsconfig@4.13.0:
+  get-tsconfig@4.13.1:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
@@ -2343,7 +2343,7 @@ snapshots:
 
   reusify@1.1.0: {}
 
-  rolldown-plugin-dts@0.21.7(rolldown@1.0.0-rc.1)(typescript@5.9.3):
+  rolldown-plugin-dts@0.21.8(rolldown@1.0.0-rc.1)(typescript@5.9.3):
     dependencies:
       '@babel/generator': 8.0.0-beta.4
       '@babel/parser': 8.0.0-beta.4
@@ -2351,7 +2351,7 @@ snapshots:
       ast-kit: 3.0.0-beta.1
       birpc: 4.0.0
       dts-resolver: 2.1.3
-      get-tsconfig: 4.13.0
+      get-tsconfig: 4.13.1
       obug: 2.1.1
       rolldown: 1.0.0-rc.1
     optionalDependencies:
@@ -2475,7 +2475,7 @@ snapshots:
       obug: 2.1.1
       picomatch: 4.0.3
       rolldown: 1.0.0-rc.1
-      rolldown-plugin-dts: 0.21.7(rolldown@1.0.0-rc.1)(typescript@5.9.3)
+      rolldown-plugin-dts: 0.21.8(rolldown@1.0.0-rc.1)(typescript@5.9.3)
       semver: 7.7.3
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
