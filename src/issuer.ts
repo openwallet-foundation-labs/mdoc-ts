@@ -29,7 +29,7 @@ export class Issuer {
     digestAlgorithm: DigestAlgorithm
     validityInfo: ValidityInfo | ValidityInfoOptions
     deviceKeyInfo: DeviceKeyInfo | DeviceKeyInfoOptions
-    certificate: Uint8Array
+    certificates: [Uint8Array, ...Uint8Array[]]
   }): Promise<IssuerSigned> {
     const signingKey = options.signingKey instanceof CoseKey ? options.signingKey : CoseKey.fromJwk(options.signingKey)
     return await this.isb.sign({ ...options, signingKey })
