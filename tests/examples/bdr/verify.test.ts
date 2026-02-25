@@ -12,6 +12,7 @@ describe('BDR mDL implementation', () => {
       {
         trustedCertificates: [new Uint8Array(issuerCertificate.rawData)],
         disableCertificateChainValidation: false,
+        now: new Date('2026-01-01'),
       },
       mdocContext
     )
