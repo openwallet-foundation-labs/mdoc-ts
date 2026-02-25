@@ -38,9 +38,7 @@ const coseKeySchema = typedMap([
     // NOTE: string is NOT allowed, but seems mDocs issued with v0.5 of this library
     // do include string keyIds. We need to ensure we don't break interop. For newly
     // created keys we ensure correct encoding.
-    zUint8Array
-      .or(z.string())
-      .exactOptional(),
+    zUint8Array.or(z.string()).exactOptional(),
   ],
   [
     CoseKeyParameter.Algorithm,
