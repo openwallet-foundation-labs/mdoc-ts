@@ -82,7 +82,7 @@ export class IssuerSignedBuilder {
     digestAlgorithm: DigestAlgorithm
     validityInfo: ValidityInfo | ValidityInfoOptions
     deviceKeyInfo: DeviceKeyInfo | DeviceKeyInfoOptions
-    certificate: Uint8Array
+    certificates: [Uint8Array, ...Uint8Array[]]
   }): Promise<IssuerSigned> {
     const validityInfo =
       options.validityInfo instanceof ValidityInfo ? options.validityInfo : ValidityInfo.create(options.validityInfo)
@@ -105,7 +105,9 @@ export class IssuerSignedBuilder {
     })
 
     const unprotectedHeaders = UnprotectedHeaders.create({
-      unprotectedHeaders: new Map([[Header.X5Chain, options.certificate]]),
+      unprotectedHeaders: new Map([
+        [Header.X5Chain, options.certificates.length === 1 ? options.certificates[0] : options.certificates],
+      ]),
     })
 
     if (options.signingKey.keyId) {

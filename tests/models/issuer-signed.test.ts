@@ -22,7 +22,7 @@ describe('Issuer signed', () => {
 
     const issuerSigned = await isb.sign({
       signingKey: CoseKey.fromJwk(ISSUER_PRIVATE_KEY_JWK),
-      certificate: new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData),
+      certificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
       algorithm: SignatureAlgorithm.ES256,
       digestAlgorithm: 'SHA-256',
       deviceKeyInfo: { deviceKey: DeviceKey.fromJwk(DEVICE_JWK_PUBLIC) },
