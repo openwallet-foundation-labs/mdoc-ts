@@ -29,6 +29,13 @@ This is a JavaScript library for Node.JS, browers and React Native to issue and 
 npm i @owf/mdoc
 ```
 
+## React Native Support
+
+When using this library in React Native you may need to add a polyfill for TextDecoder. 
+
+You can confirm this by checking if `global.TextDecoder` is available. It should be available for React Native > 0.85 or Expo SDK > 52.
+
+If it is not available, make sure to add a polyfill like [this one](https://github.com/EvanBacon/text-decoder).
 
 ## Contributing
 
