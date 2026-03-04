@@ -1,5 +1,37 @@
 # @owf/mdoc
 
+## 0.6.0
+
+### Minor Changes
+
+- 153111e: - Major rework of the library, primairly the underlying CBOR structures
+  - Includes an `Issuer`, `Holder` and `Verifier` class that should make it easier to issue, hold and verify mDocs
+  - More aligned with the specification, w.r.t. naming conventions
+  - Simplified additions/modifitcations, so adding newer features will be a lot simpler
+- fd7cc00: feat: add new openid4vp session transcript calculation methods.
+
+  NOTE that this introduces breaking chnages since `calculateSessionTranscriptBytesForOid4VpDcApi` has been renamed to `calculateSessionTranscriptBytesForOid4VpDcApiDraft24`. The `calculateSessionTranscriptBytesForOid4VpDcApi` method is now used for the latest (draft29/1.0) session transcript structure.
+
+  In addtion, `calculateSessionTranscriptBytesForOid4Vp` has been renamed to `calculateSessionTranscriptBytesForOid4VpDraft18`. The `calculateSessionTranscriptBytesForOid4Vp` method is now used for the latest (draft29/1.0) session transcript structure.
+
+- 2d5163f: The library has been rewritten to stay closer to the original encoding of cbor structures, which allows for more deterministic re-encoding, and prevents issues with using e.g. numbers in Maps (will become strings). The biggest change is that the constructor of all cbor structures should not be used anymore, and instead you should call `Class.create`. This will properly handle the transformation from user-facing options into the CBOR structure. The constructor is also used for decoding from different formats (e.g. after cborDecode, after validation, etc..), so you SHOULD NOT use these directly as it bypasses validation.
+
+  The output of created mDOCs might be slightly different, but parsing has been implemented with some backwards compatibility in mind to ensure interoperability with 0.5 of this library. Due to the improved validation, there is stricter checking whether the CBOR matches the COSE and mDOC specification. This might cause small issues with other implementations, but the test vectors in this repository compare against several other implementations. Please raise issues if you do encounter any issues.
+
+- 2d5163f: Previously this library copied over the implementation of cbor-x due to React Native incompatiblity issues. With React Native not supporting package exports it can correctly detect the browser build, and we have added back the dependency on the cbor-x library again.
+- 0311619: fix: use variable map size for map encoding
+- 6c2f153: feat: add a confirable (default 30 seconds) skew for verification of signatures. Especially mobile devices can have some time drift, meaning that a just-issued credential fails verification.
+- 15a8efa: Remove support for the CommonJS/CJS syntax. Since React Native bundles your code, the update to ESM should not cause issues. In addition all latest minor releases of Node 20+ support requiring ESM modules. This means that even if you project is still a CommonJS project, it can now depend on ESM modules. For this reason mDOC is now fully an ESM module.
+
+### Patch Changes
+
+- 2963990: feat: native JS implementation of byte encoding and decoding
+- 42b78f8: fix: in the rewrite of 0.5 to 0.6 the issuer sigend item was changed from a map to an object, and the order of the issuer signed item from signed mdoc was not retained anymore. this resulted in errors saying the digest could not be found. The issuer signed item is now correctly encoded as map again, and the order has been fixed to match the ISO 18013-5 specification
+- 52d5515: feat: add SessionTranscript for OpenID4VP with Interactive Authorization (OpenID4VCI presentation during issuance)
+- c924f2f: fix: encoding of COSE Keys. An object was used which means the COSE keys were encoded as strings and not numbers
+- 3f19ace: fix: always true statement throws error. In the DeviceResponse model there was an always true if statement that throws an error before allowing the creation of the response.
+- 3f82155: Fix proximity SessionTranscript by passing rawBytes directly
+
 ## 0.5.2
 
 ### Patch Changes
