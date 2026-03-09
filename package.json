@@ -27,7 +27,7 @@
     "changeset-version": "pnpm changeset version && pnpm style:fix"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.4",
+    "@biomejs/biome": "2.4.6",
     "@changesets/cli": "^2.29.7",
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
