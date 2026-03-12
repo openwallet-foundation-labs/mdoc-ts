@@ -1,4 +1,4 @@
-import type { CoseKey, DigestAlgorithm } from './cose/index.js'
+import type { CoseKey, DigestAlgorithm, SignatureAlgorithm } from './cose/index.js'
 import type { Mac0 } from './cose/mac0.js'
 import type { Sign1 } from './cose/sign1.js'
 
@@ -18,7 +18,11 @@ export interface MdocContext {
 
   cose: {
     sign1: {
-      sign: (input: { toBeSigned: Uint8Array; key: CoseKey }) => MaybePromise<Uint8Array>
+      sign: (input: {
+        toBeSigned: Uint8Array
+        key: CoseKey
+        algorithm?: SignatureAlgorithm
+      }) => MaybePromise<Uint8Array>
 
       verify(input: { key: CoseKey; sign1: Sign1 }): MaybePromise<boolean>
     }

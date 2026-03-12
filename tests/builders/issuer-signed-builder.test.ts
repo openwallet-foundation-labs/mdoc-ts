@@ -1,6 +1,13 @@
 import { X509Certificate } from '@peculiar/x509'
 import { describe, expect, test } from 'vitest'
-import { CoseKey, DateOnly, DeviceKey, type IssuerSigned, SignatureAlgorithm } from '../../src'
+import {
+  CoseKey,
+  DateOnly,
+  DeviceKey,
+  type IssuerSigned,
+  SignatureAlgorithm,
+  SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError,
+} from '../../src'
 import { IssuerSignedBuilder } from '../../src/mdoc/builders/issuer-signed-builder'
 import { DEVICE_JWK_PUBLIC, ISSUER_CERTIFICATE, ISSUER_PRIVATE_KEY_JWK } from '../config'
 import { mdocContext } from '../context'
@@ -74,6 +81,27 @@ describe('issuer signed builder', () => {
         mdocContext
       )
     ).resolves.not.toThrow()
+  })
+
+  test('Signature algorithm and key algorithm do not match', async () => {
+    const issuerSignedBuilder = new IssuerSignedBuilder('org.iso.18013.5.1.mDL', mdocContext).addIssuerNamespace(
+      'org.iso.18013.5.1',
+      claims
+    )
+
+    const coseKey = CoseKey.fromJwk({ ...ISSUER_PRIVATE_KEY_JWK, alg: 'ES256' })
+    expect(coseKey.jwk).toMatchObject(ISSUER_PRIVATE_KEY_JWK)
+
+    await expect(
+      issuerSignedBuilder.sign({
+        signingKey: coseKey,
+        certificate: new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData),
+        algorithm: SignatureAlgorithm.ES512,
+        digestAlgorithm: 'SHA-256',
+        deviceKeyInfo: { deviceKey: DeviceKey.fromJwk(DEVICE_JWK_PUBLIC) },
+        validityInfo: { signed, validFrom, validUntil },
+      })
+    ).rejects.toThrow(SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError)
   })
 
   test('verify validity info', async () => {

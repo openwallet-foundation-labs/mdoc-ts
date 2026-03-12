@@ -11,6 +11,7 @@ import {
   CoseXNotDefinedError,
   CoseYNotDefinedError,
 } from '../error'
+import type { SignatureAlgorithm } from '../headers'
 import { Curve } from './curve'
 import { coseKeyToJwk, coseOptionsJwkMap, jwkCoseOptionsMap, jwkToCoseKey } from './jwk'
 import { KeyOps } from './key-operation'
@@ -93,7 +94,7 @@ export class CoseKey extends CborStructure<CoseKeyEncodedStructure, CoseKeyDecod
   }
 
   public get algorithm() {
-    return this.structure.get(CoseKeyParameter.Algorithm)
+    return this.structure.get(CoseKeyParameter.Algorithm) as SignatureAlgorithm | undefined
   }
 
   public get keyOps() {
