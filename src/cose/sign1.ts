@@ -50,6 +50,7 @@ export type Sign1Options = {
   protectedHeaders?: ProtectedHeaders | ProtectedHeaderOptions['protectedHeaders']
   unprotectedHeaders?: UnprotectedHeaders | UnprotectedHeaderOptions['unprotectedHeaders']
   signingKey: CoseKey
+  algorithm?: SignatureAlgorithm
 
   payload?: Uint8Array | null
   detachedPayload?: Uint8Array
@@ -241,6 +242,7 @@ export class Sign1 extends CborStructure<Sign1EncodedStructure, Sign1DecodedStru
         externalAad: options.externalAad,
       }),
       key: options.signingKey,
+      algorithm: options.algorithm ?? options.signingKey.algorithm,
     })
 
     const sign1 = this.fromDecodedStructure({
