@@ -1,9 +1,9 @@
 export { cborDecode, cborEncode, DataItem, DateOnly } from './cbor'
-
 export * from './context'
 export * from './cose'
 export * from './holder'
 export * from './issuer'
 export * from './mdoc'
 export * from './utils'
+export { limitDisclosureToDeviceRequestNameSpaces } from './utils/limitDisclosure'
 export * from './verifier'
