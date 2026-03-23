@@ -27,7 +27,7 @@ const jwkCoseKeyMap = {
     'p-384': Curve['P-384'],
     'p-521': Curve['P-521'],
     X25519: Curve.X25519,
-    Ed2519: Curve.Ed25519,
+    Ed25519: Curve.Ed25519,
     Ed448: Curve.Ed448,
   },
   alg: {
