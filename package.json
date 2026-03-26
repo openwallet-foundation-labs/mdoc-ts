@@ -32,7 +32,7 @@
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
     "@panva/hkdf": "^1.2.1",
-    "@peculiar/x509": "^1.14.3",
+    "@peculiar/x509": "^2.0.0",
     "@types/node": "^25.5.0",
     "jose": "^6.2.2",
     "tsdown": "^0.21.5",
