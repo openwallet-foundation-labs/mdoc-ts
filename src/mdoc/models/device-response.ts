@@ -140,17 +140,6 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
     })
 
     for (const document of documents ?? []) {
-      await document.issuerSigned.issuerAuth.verify(
-        {
-          disableCertificateChainValidation: options.disableCertificateChainValidation,
-          now: options.now,
-          trustedCertificates: options.trustedCertificates,
-          verificationCallback: onCheck,
-          skewSeconds: options.skewSeconds,
-        },
-        ctx
-      )
-
       await document.deviceSigned.deviceAuth.verify(
         {
           document,
@@ -161,7 +150,16 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
         ctx
       )
 
-      await document.issuerSigned.verify({ verificationCallback: onCheck }, ctx)
+      await document.issuerSigned.verify(
+        {
+          verificationCallback: onCheck,
+          disableCertificateChainValidation: options.disableCertificateChainValidation,
+          now: options.now,
+          trustedCertificates: options.trustedCertificates,
+          skewSeconds: options.skewSeconds,
+        },
+        ctx
+      )
     }
 
     if (options.deviceRequest?.docRequests && documents) {

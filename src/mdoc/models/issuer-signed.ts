@@ -76,8 +76,14 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
   }
 
   public async verify(
-    options: { verificationCallback?: VerificationCallback },
-    ctx: Pick<MdocContext, 'x509' | 'crypto'>
+    options: {
+      verificationCallback?: VerificationCallback
+      now?: Date
+      trustedCertificates?: Array<Uint8Array>
+      disableCertificateChainValidation?: boolean
+      skewSeconds?: number
+    },
+    ctx: Pick<MdocContext, 'x509' | 'crypto' | 'cose'>
   ) {
     const { valueDigests, digestAlgorithm } = this.issuerAuth.mobileSecurityObject
 
@@ -87,6 +93,9 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
       status: digestAlgorithm ? 'PASSED' : 'FAILED',
       check: 'Issuer Auth must include a supported digestAlgorithm element',
     })
+
+    // Verify the issuer auth
+    await this.issuerAuth.verify(options, ctx)
 
     const namespaces = this.issuerNamespaces?.issuerNamespaces ?? new Map<string, IssuerSignedItem[]>()
 

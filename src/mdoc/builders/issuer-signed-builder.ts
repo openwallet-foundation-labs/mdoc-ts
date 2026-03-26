@@ -8,7 +8,7 @@ import {
   UnprotectedHeaders,
 } from '../../cose'
 import { randomUnsignedInteger } from '../../utils/randomUnsignedInteger'
-import { SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError } from '../errors'
+import { AtLeastOneCertificateRequiredError, SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError } from '../errors'
 import {
   DeviceKeyInfo,
   type DeviceKeyInfoOptions,
@@ -83,7 +83,7 @@ export class IssuerSignedBuilder {
     digestAlgorithm: DigestAlgorithm
     validityInfo: ValidityInfo | ValidityInfoOptions
     deviceKeyInfo: DeviceKeyInfo | DeviceKeyInfoOptions
-    certificate: Uint8Array
+    certificates: Uint8Array[]
   }): Promise<IssuerSigned> {
     if (options.signingKey.algorithm && options.signingKey.algorithm !== options.algorithm) {
       throw new SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError(
@@ -99,6 +99,12 @@ export class IssuerSignedBuilder {
         ? options.deviceKeyInfo
         : DeviceKeyInfo.create(options.deviceKeyInfo)
 
+    if (options.certificates.length === 0) {
+      throw new AtLeastOneCertificateRequiredError(
+        'At least one certificate (the document signer certificate) must be provided.'
+      )
+    }
+
     const mso = MobileSecurityObject.create({
       docType: this.docType,
       validityInfo,
@@ -112,7 +118,9 @@ export class IssuerSignedBuilder {
     })
 
     const unprotectedHeaders = UnprotectedHeaders.create({
-      unprotectedHeaders: new Map([[Header.X5Chain, options.certificate]]),
+      unprotectedHeaders: new Map([
+        [Header.X5Chain, options.certificates.length === 1 ? options.certificates[0] : options.certificates],
+      ]),
     })
 
     if (options.signingKey.keyId) {

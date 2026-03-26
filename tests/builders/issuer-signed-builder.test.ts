@@ -4,7 +4,7 @@ import {
   CoseKey,
   DateOnly,
   DeviceKey,
-  type IssuerSigned,
+  IssuerSigned,
   SignatureAlgorithm,
   SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError,
 } from '../../src'
@@ -56,7 +56,7 @@ describe('issuer signed builder', () => {
 
     issuerSigned = await issuerSignedBuilder.sign({
       signingKey: coseKey,
-      certificate: new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData),
+      certificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
       algorithm: SignatureAlgorithm.ES256,
       digestAlgorithm: 'SHA-256',
       deviceKeyInfo: { deviceKey: DeviceKey.fromJwk(DEVICE_JWK_PUBLIC) },
@@ -95,7 +95,7 @@ describe('issuer signed builder', () => {
     await expect(
       issuerSignedBuilder.sign({
         signingKey: coseKey,
-        certificate: new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData),
+        certificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
         algorithm: SignatureAlgorithm.ES512,
         digestAlgorithm: 'SHA-256',
         deviceKeyInfo: { deviceKey: DeviceKey.fromJwk(DEVICE_JWK_PUBLIC) },
@@ -128,5 +128,33 @@ describe('issuer signed builder', () => {
   test('should include the namespace and attributes', () => {
     const prettyClaims = issuerSigned.getPrettyClaims('org.iso.18013.5.1')
     expect(prettyClaims).toEqual(claims)
+  })
+
+  test('should support certificate chain with multiple certificates', async () => {
+    const issuerSignedBuilder = new IssuerSignedBuilder('org.iso.18013.5.1.mDL', mdocContext).addIssuerNamespace(
+      'org.iso.18013.5.1',
+      { family_name: 'Smith' }
+    )
+
+    const cert1 = new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)
+    const cert2 = new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)
+
+    const issuerSignedWithChain = await issuerSignedBuilder.sign({
+      signingKey: CoseKey.fromJwk(ISSUER_PRIVATE_KEY_JWK),
+      certificates: [cert1, cert2],
+      algorithm: SignatureAlgorithm.ES256,
+      digestAlgorithm: 'SHA-256',
+      deviceKeyInfo: { deviceKey: DeviceKey.fromJwk(DEVICE_JWK_PUBLIC) },
+      validityInfo: { signed, validFrom, validUntil },
+    })
+
+    expect(issuerSignedWithChain.issuerAuth.certificateChain).toHaveLength(2)
+    expect(issuerSignedWithChain.issuerAuth.certificateChain[0]).toEqual(cert1)
+    expect(issuerSignedWithChain.issuerAuth.certificateChain[1]).toEqual(cert2)
+
+    // Verify that the certificate chain can be decoded correctly
+    const encodedChain = issuerSignedWithChain.encode()
+    const decodedChain = IssuerSigned.decode(encodedChain)
+    expect(decodedChain.issuerAuth.certificateChain).toHaveLength(2)
   })
 })

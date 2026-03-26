@@ -13,7 +13,7 @@ import { base64url } from './utils'
 export class Holder {
   /**
    *
-   * string should be base64url encoded as defined in openid4vci Draft 15
+   * string should be base64url encoded as defined in openid4vci
    *
    */
   public static async verifyIssuerSigned(
@@ -25,7 +25,7 @@ export class Holder {
       trustedCertificates?: Array<Uint8Array>
       skewSeconds?: number
     },
-    ctx: Pick<MdocContext, 'cose' | 'x509'>
+    ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto'>
   ) {
     const issuerSigned =
       typeof options.issuerSigned === 'string'
@@ -34,7 +34,7 @@ export class Holder {
           ? IssuerSigned.decode(options.issuerSigned)
           : options.issuerSigned
 
-    await issuerSigned.issuerAuth.verify(options, ctx)
+    await issuerSigned.verify(options, ctx)
   }
 
   public static async verifyDeviceRequest(
