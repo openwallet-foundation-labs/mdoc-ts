@@ -1,5 +1,5 @@
 ---
-"@animo-id/mdoc": patch
+"@owf/mdoc": patch
 ---
 
 Fix proximity SessionTranscript by passing rawBytes directly

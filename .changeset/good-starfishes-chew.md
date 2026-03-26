@@ -1,5 +1,5 @@
 ---
-"@animo-id/mdoc": minor
+"@owf/mdoc": minor
 ---
 
 feat: add new openid4vp session transcript calculation methods.

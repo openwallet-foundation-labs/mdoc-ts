@@ -1,31 +1,15 @@
-<p align="center">
-  <picture>
-   <source media="(prefers-color-scheme: light)" srcset="https://res.cloudinary.com/animo-solutions/image/upload/v1656578320/animo-logo-light-no-text_ok9auy.svg">
-   <source media="(prefers-color-scheme: dark)" srcset="https://res.cloudinary.com/animo-solutions/image/upload/v1656578320/animo-logo-dark-no-text_fqqdq9.svg">
-   <img alt="Animo Logo" height="250px" />
-  </picture>
-</p>
-
 <h1 align="center" ><b>mDOC and mDL - TypeScript</b></h1>
 
 [ISO 18013-5](https://www.iso.org/standard/69084.html) defines mDL (mobile Driver’s Licenses): an ISO standard for digital driver licenses.
 
-This is a JavaScript library for Node.JS, browers and React Native to issue and verify mDL [CBOR encoded](https://cbor.io/) documents in accordance with **ISO 18013-7 (draft's date: 2024-03-12)**.
-
-<h4 align="center">Powered by &nbsp; 
-  <picture>
-    <source media="(prefers-color-scheme: light)" srcset="https://res.cloudinary.com/animo-solutions/image/upload/v1656579715/animo-logo-light-text_cma2yo.svg">
-    <source media="(prefers-color-scheme: dark)" srcset="https://res.cloudinary.com/animo-solutions/image/upload/v1656579715/animo-logo-dark-text_uccvqa.svg">
-    <img alt="Animo Logo" height="12px" />
-  </picture>
-</h4><br>
+This is a JavaScript library for Node.JS, browers and React Native to issue and verify mDL [CBOR encoded](https://cbor.io/) documents in accordance with ISO 18013-7
 
 <p align="center">
   <a href="https://typescriptlang.org">
     <img src="https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg" />
   </a>
-  <a href="https://www.npmjs.com/package/@animo-id/mdoc">
-    <img src="https://img.shields.io/npm/v/@animo-id/mdoc" />
+  <a href="https://www.npmjs.com/package/@owf/mdoc">
+    <img src="https://img.shields.io/npm/v/@owf/mdoc" />
   </a>
 </p>
 
@@ -42,9 +26,16 @@ This is a JavaScript library for Node.JS, browers and React Native to issue and 
 ## Installation
 
 ```bash
-npm i @animo-id/mdoc
+npm i @owf/mdoc
 ```
 
+## React Native Support
+
+When using this library in React Native you may need to add a polyfill for TextDecoder. 
+
+You can confirm this by checking if `global.TextDecoder` is available. It should be available for React Native > 0.85 or Expo SDK > 52.
+
+If it is not available, make sure to add a polyfill like [this one](https://github.com/EvanBacon/text-decoder).
 
 ## Contributing
 

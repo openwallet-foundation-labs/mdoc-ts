@@ -22,7 +22,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
       - name: Setup NodeJS
         uses: actions/setup-node@v6
         with:
@@ -51,7 +51,7 @@ jobs:
         run: echo "CURRENT_PACKAGE_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
       - name: Create Github Release
-        if: steps.changesets.outputs.published == 'true'
+        if: "startsWith(github.event.head_commit.message, 'chore(release): new version')"
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.CURRENT_PACKAGE_VERSION }}
@@ -65,7 +65,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
       - name: Setup NodeJS
         uses: actions/setup-node@v6
         with:
@@ -81,12 +81,11 @@ jobs:
       - name: Create unstable release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # this ensures there's always a patch release created
           cat << 'EOF' > .changeset/snapshot-template-changeset.md
           ---
-          '@animo-id/mdoc': patch
+          '@owf/mdoc': patch
           ---
 
           snapshot release

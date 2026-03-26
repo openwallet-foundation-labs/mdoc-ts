@@ -8,7 +8,7 @@ import {
   UnprotectedHeaders,
 } from '../../cose'
 import { randomUnsignedInteger } from '../../utils/randomUnsignedInteger'
-import { AtLeastOneCertificateRequiredError } from '../errors'
+import { AtLeastOneCertificateRequiredError, SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError } from '../errors'
 import {
   DeviceKeyInfo,
   type DeviceKeyInfoOptions,
@@ -85,6 +85,12 @@ export class IssuerSignedBuilder {
     deviceKeyInfo: DeviceKeyInfo | DeviceKeyInfoOptions
     certificates: Uint8Array[]
   }): Promise<IssuerSigned> {
+    if (options.signingKey.algorithm && options.signingKey.algorithm !== options.algorithm) {
+      throw new SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError(
+        `Signing key algorithm '${options.signingKey.algorithm}' does not match the supplied algorithm '${options.algorithm}'`
+      )
+    }
+
     const validityInfo =
       options.validityInfo instanceof ValidityInfo ? options.validityInfo : ValidityInfo.create(options.validityInfo)
 
@@ -127,6 +133,7 @@ export class IssuerSignedBuilder {
         unprotectedHeaders,
         protectedHeaders,
         signingKey: options.signingKey,
+        algorithm: options.algorithm,
       },
       this.ctx
     )

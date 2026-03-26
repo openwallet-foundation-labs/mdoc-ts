@@ -11,6 +11,7 @@ import {
   CoseXNotDefinedError,
   CoseYNotDefinedError,
 } from '../error'
+import type { SignatureAlgorithm } from '../headers'
 import { Curve } from './curve'
 import { coseKeyToJwk, coseOptionsJwkMap, jwkCoseOptionsMap, jwkToCoseKey } from './jwk'
 import { KeyOps } from './key-operation'
@@ -38,9 +39,7 @@ const coseKeySchema = typedMap([
     // NOTE: string is NOT allowed, but seems mDocs issued with v0.5 of this library
     // do include string keyIds. We need to ensure we don't break interop. For newly
     // created keys we ensure correct encoding.
-    zUint8Array
-      .or(z.string())
-      .exactOptional(),
+    zUint8Array.or(z.string()).exactOptional(),
   ],
   [
     CoseKeyParameter.Algorithm,
@@ -95,7 +94,7 @@ export class CoseKey extends CborStructure<CoseKeyEncodedStructure, CoseKeyDecod
   }
 
   public get algorithm() {
-    return this.structure.get(CoseKeyParameter.Algorithm)
+    return this.structure.get(CoseKeyParameter.Algorithm) as SignatureAlgorithm | undefined
   }
 
   public get keyOps() {

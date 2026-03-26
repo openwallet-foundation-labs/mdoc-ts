@@ -1,5 +1,5 @@
 ---
-"@animo-id/mdoc": minor
+"@owf/mdoc": minor
 ---
 
 - Major rework of the library, primairly the underlying CBOR structures

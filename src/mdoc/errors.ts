@@ -12,3 +12,4 @@ export class DuplicateNamespaceInIssuerNamespacesError extends MdlError {}
 export class DuplicateDocumentInDeviceResponseError extends MdlError {}
 export class EitherSignatureOrMacMustBeProvidedError extends MdlError {}
 export class AtLeastOneCertificateRequiredError extends MdlError {}
+export class SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError extends MdlError {}

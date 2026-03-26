@@ -198,71 +198,69 @@ export function typedMap<const Entries extends EntriesBase>(
     // Input is untyped map
     z.map(z.unknown(), z.unknown()),
     // Output is typed map
-    z
-      .instanceof<typeof TypedMap<InferredSchema<Entries>, OptionalKeys<Entries>>>(TypedMap)
-      .superRefine((map, ctx) => {
-        // Check there's no additional keys in the map if not allowed
-        const additionalKeys = Array.from(map.keys()).filter((key) => !schemaMap.has(key as string | number))
-        if (additionalKeys.length > 0 && !allowAdditionalKeys) {
-          for (const additionalKey of additionalKeys) {
-            if (typeof additionalKey !== 'string' && typeof additionalKey !== 'number') {
-              ctx.addIssue({
-                code: 'invalid_key',
-                origin: 'map',
-                continue: true,
-                path: [],
-                input: map,
-                issues: [],
-                message: 'Key found in map that is not a string or number',
-              })
-            } else {
-              ctx.addIssue({
-                code: 'invalid_key',
-                origin: 'map',
-                continue: true,
-                path: [additionalKey],
-                input: map,
-                issues: [],
-                message: `Unexpected key '${additionalKey}' found in map, additional keys are not allowed.`,
-              })
-            }
-          }
-        }
-
-        for (const [key, valueSchema] of schemaMap.entries()) {
-          const hasKey = map.has(key)
-          const value = map.get(key)
-
-          if (!hasKey && requiredKeys.includes(key)) {
+    z.instanceof<typeof TypedMap<InferredSchema<Entries>, OptionalKeys<Entries>>>(TypedMap).superRefine((map, ctx) => {
+      // Check there's no additional keys in the map if not allowed
+      const additionalKeys = Array.from(map.keys()).filter((key) => !schemaMap.has(key as string | number))
+      if (additionalKeys.length > 0 && !allowAdditionalKeys) {
+        for (const additionalKey of additionalKeys) {
+          if (typeof additionalKey !== 'string' && typeof additionalKey !== 'number') {
             ctx.addIssue({
-              code: 'invalid_value',
+              code: 'invalid_key',
+              origin: 'map',
               continue: true,
-              message: `Expected key '${key}' to be defined.`,
-              path: [key],
-              values: [],
-              input: value,
+              path: [],
+              input: map,
+              issues: [],
+              message: 'Key found in map that is not a string or number',
             })
-            continue
-          }
-
-          // If key is not in the map, and also not required, skip validation
-          if (!hasKey && !requiredKeys.includes(key)) {
-            continue
-          }
-
-          const parseResult = valueSchema.safeParse(value)
-          if (!parseResult.success) {
-            for (const issue of parseResult.error.issues) {
-              ctx.addIssue({
-                ...issue,
-                // NOTE: if we use numbers, zod-validation-error will use "index", thinking
-                // it's an array, that's confusing
-                path: [`${key}`, ...issue.path],
-              } as zCore.$ZodSuperRefineIssue)
-            }
+          } else {
+            ctx.addIssue({
+              code: 'invalid_key',
+              origin: 'map',
+              continue: true,
+              path: [additionalKey],
+              input: map,
+              issues: [],
+              message: `Unexpected key '${additionalKey}' found in map, additional keys are not allowed.`,
+            })
           }
         }
-      }),
+      }
+
+      for (const [key, valueSchema] of schemaMap.entries()) {
+        const hasKey = map.has(key)
+        const value = map.get(key)
+
+        if (!hasKey && requiredKeys.includes(key)) {
+          ctx.addIssue({
+            code: 'invalid_value',
+            continue: true,
+            message: `Expected key '${key}' to be defined.`,
+            path: [key],
+            values: [],
+            input: value,
+          })
+          continue
+        }
+
+        // If key is not in the map, and also not required, skip validation
+        if (!hasKey && !requiredKeys.includes(key)) {
+          continue
+        }
+
+        const parseResult = valueSchema.safeParse(value)
+        if (!parseResult.success) {
+          for (const issue of parseResult.error.issues) {
+            ctx.addIssue({
+              ...issue,
+              // NOTE: if we use numbers, zod-validation-error will use "index", thinking
+              // it's an array, that's confusing
+              path: [`${key}`, ...issue.path],
+            } as zCore.$ZodSuperRefineIssue)
+          }
+        }
+      }
+    }),
     {
       decode: (input) => (decode ? decode(input, originalDecode) : originalDecode(input)),
       encode: (output) => (encode ? encode(output, originalEncode) : originalEncode(output)),

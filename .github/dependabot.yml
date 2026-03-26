@@ -24,7 +24,9 @@ updates:
         update-types:
           - "minor"
       # Major updates will be created individually by default
-
+    ignore:
+      # Needs manual biome.json update
+      - dependency-name: "@biomejs/biome"
     # Enable version updates for all severity levels
     allow:
       - dependency-type: "all"

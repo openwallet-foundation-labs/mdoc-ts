@@ -1,4 +1,4 @@
-# @animo-id/mdoc
+# @owf/mdoc
 
 ## 0.5.2
 
