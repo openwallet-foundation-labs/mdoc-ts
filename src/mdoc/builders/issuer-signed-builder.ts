@@ -8,6 +8,7 @@ import {
   UnprotectedHeaders,
 } from '../../cose'
 import { randomUnsignedInteger } from '../../utils/randomUnsignedInteger'
+import { AtLeastOneCertificateRequiredError } from '../errors'
 import {
   DeviceKeyInfo,
   type DeviceKeyInfoOptions,
@@ -82,7 +83,7 @@ export class IssuerSignedBuilder {
     digestAlgorithm: DigestAlgorithm
     validityInfo: ValidityInfo | ValidityInfoOptions
     deviceKeyInfo: DeviceKeyInfo | DeviceKeyInfoOptions
-    certificates: [Uint8Array, ...Uint8Array[]]
+    certificates: Uint8Array[]
   }): Promise<IssuerSigned> {
     const validityInfo =
       options.validityInfo instanceof ValidityInfo ? options.validityInfo : ValidityInfo.create(options.validityInfo)
@@ -91,6 +92,12 @@ export class IssuerSignedBuilder {
       options.deviceKeyInfo instanceof DeviceKeyInfo
         ? options.deviceKeyInfo
         : DeviceKeyInfo.create(options.deviceKeyInfo)
+
+    if (options.certificates.length === 0) {
+      throw new AtLeastOneCertificateRequiredError(
+        'At least one certificate (the document signer certificate) must be provided.'
+      )
+    }
 
     const mso = MobileSecurityObject.create({
       docType: this.docType,

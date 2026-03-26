@@ -140,6 +140,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
     })
 
     for (const document of documents ?? []) {
+      // FIXME: issuerSigned.verify should also verify the issuerAuth
       await document.issuerSigned.issuerAuth.verify(
         {
           disableCertificateChainValidation: options.disableCertificateChainValidation,
