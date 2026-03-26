@@ -7,5 +7,7 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   failOnWarn: true,
-  inlineOnly: [],
+  deps: {
+    onlyBundle: [],
+  },
 })
