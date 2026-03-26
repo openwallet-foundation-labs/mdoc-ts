@@ -4,7 +4,7 @@ import type { IssuerSigned } from '../mdoc/models/issuer-signed'
 export const findIssuerSigned = (is: Array<IssuerSigned>, docType: DocType) => {
   const issuerSigned = is.filter((i) => i.issuerAuth.mobileSecurityObject.docType === docType)
 
-  if (!issuerSigned || !issuerSigned[0]) {
+  if (!issuerSigned?.[0]) {
     throw new Error(`No Issuer Signed matching docType '${docType}'`)
   }
 
