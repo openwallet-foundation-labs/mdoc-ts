@@ -1,9 +1,4 @@
-import {
-  CoseKey,
-  type CoseKeyDecodedStructure,
-  type CoseKeyEncodedStructure,
-  type CoseKeyOptions,
-} from '../../cose/key/key'
+import { CoseKey, type CoseKeyDecodedStructure, type CoseKeyEncodedStructure, type CoseKeyOptions } from '@owf/cose'
 
 export type DeviceKeyDecodedStructure = CoseKeyDecodedStructure
 export type DeviceKeyEncodedStructure = CoseKeyEncodedStructure

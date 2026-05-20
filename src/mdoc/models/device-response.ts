@@ -1,7 +1,12 @@
+import {
+  CborStructure,
+  type CoseKey,
+  ProtectedHeaders,
+  RegisteredCwtHeaderClaimKey,
+  UnprotectedHeaders,
+} from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 import type { MdocContext } from '../../context'
-import { type CoseKey, Header, ProtectedHeaders, UnprotectedHeaders } from '../../cose'
 import { base64url, TypedMap, typedMap } from '../../utils'
 import { findIssuerSigned } from '../../utils/findIssuerSigned'
 import { limitDisclosureToDeviceRequestNameSpaces } from '../../utils/limitDisclosure'
@@ -230,41 +235,44 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
         }).encode({ asDataItem: true })
 
         const unprotectedHeaders = signingKey.keyId
-          ? UnprotectedHeaders.create({ unprotectedHeaders: new Map([[Header.KeyId, signingKey.keyId]]) })
+          ? UnprotectedHeaders.create({
+              unprotectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.KeyId, signingKey.keyId]]),
+            })
           : UnprotectedHeaders.create({})
 
         const protectedHeaders = ProtectedHeaders.create({
-          protectedHeaders: new Map([[Header.Algorithm, signingKey.algorithm]]),
+          protectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.Algorithm, signingKey.algorithm]]),
         })
 
         const deviceAuthOptions: DeviceAuthOptions = {}
         if (useSignature) {
-          const deviceSignature = await DeviceSignature.create(
-            {
-              unprotectedHeaders,
-              protectedHeaders,
-              detachedPayload: deviceAuthenticationBytes,
-              signingKey,
-            },
-            ctx
-          )
+          const deviceSignature = await DeviceSignature.create({
+            unprotectedHeaders,
+            protectedHeaders,
+            detachedPayload: deviceAuthenticationBytes,
+          }).sign({ signingKey }, { sign: ctx.cose.sign1.sign })
 
           deviceAuthOptions.deviceSignature = deviceSignature
         } else {
           const ephemeralKey = options.mac?.ephemeralKey
           if (!ephemeralKey) throw new Error('Ephemeral key is missing')
 
-          const deviceMac = await DeviceMac.create(
+          const deviceMac = DeviceMac.create({
+            protectedHeaders,
+            unprotectedHeaders,
+            detachedPayload: deviceAuthenticationBytes,
+          })
+
+          const macKey = await deviceMac.createDeviceMacKey(
             {
-              protectedHeaders,
-              unprotectedHeaders,
-              detachedPayload: deviceAuthenticationBytes,
+              publicKey: ephemeralKey,
               privateKey: signingKey,
-              ephemeralKey: ephemeralKey,
               sessionTranscript: options.sessionTranscript,
             },
             ctx
           )
+
+          await deviceMac.authenticate({ key: macKey }, { mac: ctx.cose.mac0.sign })
 
           deviceAuthOptions.deviceMac = deviceMac
         }

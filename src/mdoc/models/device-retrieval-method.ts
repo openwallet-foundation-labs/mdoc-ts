@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 import { BleOptions, type BleOptionsEncodedStructure } from './ble-options'
 import { NfcOptions, type NfcOptionsEncodedStructure } from './nfc-options'
 import type { RetrievalOptions } from './retrieval-options'

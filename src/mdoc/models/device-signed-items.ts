@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 import type { DataElementIdentifier } from './data-element-identifier'
 import type { DataElementValue } from './data-element-value'
 

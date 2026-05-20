@@ -1,5 +1,5 @@
+import { cborEncode } from '@owf/cose'
 import z from 'zod'
-import { cborEncode } from '../../cbor'
 import type { MdocContext } from '../../context'
 import { zUint8Array } from '../../utils/zod'
 import { Handover } from './handover'

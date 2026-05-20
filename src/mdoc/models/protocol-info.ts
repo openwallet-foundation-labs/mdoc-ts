@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import z from 'zod'
-import { CborStructure } from '../../cbor'
 
 const protocolInfoSchema = z.unknown()
 export type ProtocolInfoStructure = z.infer<typeof protocolInfoSchema>

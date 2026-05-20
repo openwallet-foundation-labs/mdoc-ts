@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor/cbor-structure'
 import { zUint8Array } from '../../utils/zod'
 import type { DigestId } from './digest-id'
 import type { Namespace } from './namespace'

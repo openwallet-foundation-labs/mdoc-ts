@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { Header } from '../../src/cose/headers/defaults'
-import { ReaderAuth } from '../../src/mdoc/models/reader-auth'
+import { ReaderAuth, RegisteredCwtHeaderClaimKey } from '../../src'
 import { hex } from '../../src/utils'
 
 const cbor =
@@ -12,8 +11,8 @@ describe('reader auth', () => {
 
     expect(readerAuth.signature).toBeDefined()
     expect(readerAuth.payload).toBeNull()
-    expect(readerAuth.unprotectedHeaders.headers?.has(Header.X5Chain)).toBeTruthy()
-    expect(readerAuth.protectedHeaders.headers?.has(Header.Algorithm)).toBeTruthy()
+    expect(readerAuth.unprotectedHeaders.headers?.has(RegisteredCwtHeaderClaimKey.X5Chain)).toBeTruthy()
+    expect(readerAuth.protectedHeaders.headers?.has(RegisteredCwtHeaderClaimKey.Algorithm)).toBeTruthy()
 
     expect(() => readerAuth.toBeSigned).toThrow()
   })

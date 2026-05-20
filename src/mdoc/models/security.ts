@@ -1,5 +1,5 @@
+import { CborStructure, DataItem } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure, DataItem } from '../../cbor'
 import { EDeviceKey } from './e-device-key'
 
 const securityEncodedSchema = z.tuple([z.number(), z.instanceof(DataItem)])

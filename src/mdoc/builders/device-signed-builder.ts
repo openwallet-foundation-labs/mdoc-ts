@@ -1,13 +1,13 @@
-import type { MdocContext } from '../../context'
 import {
   type CoseKey,
-  Header,
   type MacAlgorithm,
   ProtectedHeaders,
+  RegisteredCwtHeaderClaimKey,
   type SignatureAlgorithm,
   UnprotectedHeaders,
-} from '../../cose'
-import { base64 } from '../../utils'
+} from '@owf/cose'
+import type { MdocContext } from '../../context'
+import { base64, stringToBytes } from '../../utils'
 import {
   DeviceAuth,
   DeviceMac,
@@ -52,15 +52,15 @@ export class DeviceSignedBuilder {
     derCertificate: string
   }): Promise<DeviceSigned> {
     const protectedHeaders = ProtectedHeaders.create({
-      protectedHeaders: new Map([[Header.Algorithm, options.algorithm]]),
+      protectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm]]),
     })
 
     const unprotectedHeaders = UnprotectedHeaders.create({
-      unprotectedHeaders: new Map([[Header.X5Chain, base64.decode(options.derCertificate)]]),
+      unprotectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.X5Chain, base64.decode(options.derCertificate)]]),
     })
 
     if (options.signingKey.keyId) {
-      unprotectedHeaders.headers?.set(Header.KeyId, options.signingKey.keyId)
+      unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.signingKey.keyId)
     }
 
     const deviceAuthentication = DeviceAuthentication.create({
@@ -69,14 +69,17 @@ export class DeviceSignedBuilder {
       docType: this.docType,
     })
 
-    const deviceSignature = await DeviceSignature.create(
+    const deviceSignature = DeviceSignature.create({
+      unprotectedHeaders,
+      protectedHeaders,
+      detachedPayload: deviceAuthentication.encode({ asDataItem: true }),
+    })
+
+    await deviceSignature.sign(
       {
-        unprotectedHeaders,
-        protectedHeaders,
-        detachedPayload: deviceAuthentication.encode({ asDataItem: true }),
         signingKey: options.signingKey,
       },
-      this.ctx
+      { sign: this.ctx.cose.sign1.sign }
     )
 
     return DeviceSigned.create({
@@ -95,15 +98,15 @@ export class DeviceSignedBuilder {
     derCertificate: string
   }): Promise<DeviceSigned> {
     const protectedHeaders = ProtectedHeaders.create({
-      protectedHeaders: new Map([[Header.Algorithm, options.algorithm]]),
+      protectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm]]),
     })
 
     const unprotectedHeaders = UnprotectedHeaders.create({
-      unprotectedHeaders: new Map([[Header.X5Chain, base64.decode(options.derCertificate)]]),
+      unprotectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.X5Chain, base64.decode(options.derCertificate)]]),
     })
 
     if (options.privateKey.keyId) {
-      unprotectedHeaders.headers?.set(Header.KeyId, options.privateKey.keyId)
+      unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.privateKey.keyId)
     }
 
     const deviceAuthentication = DeviceAuthentication.create({
@@ -112,22 +115,32 @@ export class DeviceSignedBuilder {
       docType: this.docType,
     })
 
-    const deviceMac = await DeviceMac.create(
+    const deviceMac = DeviceMac.create({
+      unprotectedHeaders,
+      protectedHeaders,
+      detachedPayload: deviceAuthentication.encode({ asDataItem: true }),
+    })
+
+    const salt = await this.ctx.crypto.digest({ digestAlgorithm: 'SHA-256', bytes: options.sessionTranscript.encode() })
+
+    const derivedKey = await this.ctx.crypto.hdkf({
+      privateKey: options.privateKey.privateKey,
+      publicKey: options.publicKey.publicKey,
+      info: stringToBytes('EMacKey'),
+      salt,
+    })
+
+    const deviceMacWithTag = await deviceMac.authenticate(
       {
-        unprotectedHeaders,
-        protectedHeaders,
-        detachedPayload: deviceAuthentication.encode({ asDataItem: true }),
-        privateKey: options.privateKey,
-        ephemeralKey: options.publicKey,
-        sessionTranscript: options.sessionTranscript,
+        key: derivedKey,
       },
-      this.ctx
+      { mac: this.ctx.cose.mac0.sign }
     )
 
     return DeviceSigned.create({
       deviceNamespaces: this.namespaces,
       deviceAuth: DeviceAuth.create({
-        deviceMac,
+        deviceMac: deviceMacWithTag,
       }),
     })
   }

@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import z from 'zod'
-import { CborStructure } from '../../cbor'
 
 const oid4vpDcApiDraft24HandoverInfoSchema = z.tuple([z.string(), z.string(), z.string()])
 const oid4vpDcApiDraft24HandoverInfoDecodedSchema = z.object({

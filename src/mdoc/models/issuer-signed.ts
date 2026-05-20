@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 import type { MdocContext } from '../../context'
 import { base64url, TypedMap, typedMap } from '../../utils'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback'

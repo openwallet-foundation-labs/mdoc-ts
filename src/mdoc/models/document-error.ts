@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 
 // Zod schema for DocumentError
 const documentErrorSchema = z.map(z.string(), z.number())

@@ -1,6 +1,7 @@
+import type { CoseKey, Mac0Options } from '@owf/cose'
+import { Mac0, type Mac0DecodedStructure, type Mac0EncodedStructure } from '@owf/cose'
 import type { MdocContext } from '../../context'
-import type { CoseKey, Mac0Options } from '../../cose'
-import { Mac0, type Mac0DecodedStructure, type Mac0EncodedStructure } from '../../cose/mac0'
+import { stringToBytes } from '../../utils'
 import { SessionTranscript } from './session-transcript'
 
 export type DeviceMacEncodedStructure = Mac0EncodedStructure
@@ -17,15 +18,7 @@ export class DeviceMac extends Mac0 {
     },
     ctx: Pick<MdocContext, 'crypto' | 'cose'>
   ) {
-    const key = await ctx.crypto.calculateEphemeralMacKey({
-      privateKey: options.privateKey.privateKey,
-      publicKey: options.publicKey.publicKey,
-      sessionTranscriptBytes:
-        options.sessionTranscript instanceof SessionTranscript
-          ? options.sessionTranscript.encode({ asDataItem: true })
-          : options.sessionTranscript,
-      info: options.info ?? 'EMacKey',
-    })
+    const key = await this.createDeviceMacKey(options, ctx)
 
     return ctx.cose.mac0.verify({
       mac0: this,
@@ -33,7 +26,30 @@ export class DeviceMac extends Mac0 {
     })
   }
 
-  public static async create(options: DeviceMacOptions, ctx: Pick<MdocContext, 'cose' | 'crypto'>) {
-    return super.create(options, ctx) as Promise<DeviceMac>
+  public static create(options: DeviceMacOptions) {
+    return super.create(options) as DeviceMac
+  }
+
+  public async createDeviceMacKey(
+    options: {
+      publicKey: CoseKey
+      privateKey: CoseKey
+      sessionTranscript: SessionTranscript | Uint8Array
+      info?: 'EMacKey' | 'SKReader' | 'SKDevice'
+    },
+    ctx: Pick<MdocContext, 'crypto' | 'cose'>
+  ) {
+    return await ctx.crypto.hdkf({
+      privateKey: options.privateKey.privateKey,
+      publicKey: options.publicKey.publicKey,
+      salt: await ctx.crypto.digest({
+        digestAlgorithm: 'SHA-256',
+        bytes:
+          options.sessionTranscript instanceof SessionTranscript
+            ? options.sessionTranscript.encode({ asDataItem: true })
+            : options.sessionTranscript,
+      }),
+      info: stringToBytes(options.info ?? 'EMacKey'),
+    })
   }
 }

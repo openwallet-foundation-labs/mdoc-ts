@@ -1,5 +1,5 @@
+import { CborStructure, DataItem } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure, DataItem } from '../../cbor'
 import { DeviceNamespaces, type DeviceNamespacesEncodedStructure } from './device-namespaces'
 import type { DocType } from './doctype'
 import { SessionTranscript, sessionTranscriptEncodedSchema } from './session-transcript'

@@ -1,5 +1,5 @@
+import { CborStructure, DataItem } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure, DataItem } from '../../cbor'
 import type { MdocContext } from '../../context'
 import { DeviceEngagement, type DeviceEngagementEncodedStructure } from './device-engagement'
 import { EReaderKey, type EReaderKeyEncodedStructure } from './e-reader-key'

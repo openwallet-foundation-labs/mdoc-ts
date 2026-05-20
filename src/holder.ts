@@ -1,5 +1,5 @@
+import type { CoseKey } from '@owf/cose'
 import type { MdocContext } from './context'
-import type { CoseKey } from './cose'
 import {
   type DeviceNamespaces,
   DeviceRequest,

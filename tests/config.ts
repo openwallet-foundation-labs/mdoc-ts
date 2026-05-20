@@ -3,6 +3,7 @@ export const DEVICE_JWK_PUBLIC = {
   x: 'iBh5ynojixm_D0wfjADpouGbp6b3Pq6SuFHU3htQhVk',
   y: 'oxS1OAORJ7XNUHNfVFGeM8E0RQVFxWA62fJj-sxW03c',
   crv: 'P-256',
+  alg: 'ES256',
 }
 
 export const DEVICE_JWK_PRIVATE = {

@@ -1,6 +1,4 @@
-import type { CoseKey, DigestAlgorithm, SignatureAlgorithm } from './cose/index.js'
-import type { Mac0 } from './cose/mac0.js'
-import type { Sign1 } from './cose/sign1.js'
+import type { CoseKey, DigestAlgorithm, Mac0, Mac0Context, Sign1Context } from '@owf/cose'
 
 type MaybePromise<T> = Promise<T> | T
 
@@ -8,36 +6,31 @@ export interface MdocContext {
   crypto: {
     random: (length: number) => Uint8Array
     digest: (input: { digestAlgorithm: DigestAlgorithm; bytes: Uint8Array }) => MaybePromise<Uint8Array>
-    calculateEphemeralMacKey: (input: {
+    hdkf: (input: {
+      digestAlgorithm?: DigestAlgorithm
       privateKey: Uint8Array
       publicKey: Uint8Array
-      sessionTranscriptBytes: Uint8Array
-      info: 'EMacKey' | 'SKReader' | 'SKDevice'
-    }) => MaybePromise<CoseKey>
+      salt: Uint8Array
+      info: Uint8Array
+    }) => MaybePromise<Uint8Array>
   }
 
   cose: {
     sign1: {
-      sign: (input: {
-        toBeSigned: Uint8Array
-        key: CoseKey
-        algorithm?: SignatureAlgorithm
-      }) => MaybePromise<Uint8Array>
-
-      verify(input: { key: CoseKey; sign1: Sign1 }): MaybePromise<boolean>
+      sign: Sign1Context['sign']
+      verify: Sign1Context['verify']
     }
 
     mac0: {
-      sign: (input: { key: CoseKey; toBeAuthenticated: Uint8Array }) => MaybePromise<Uint8Array>
-
-      verify(input: { mac0: Mac0; key: CoseKey }): MaybePromise<boolean>
+      sign: Mac0Context['mac']
+      verify(input: { mac0: Mac0; key: CoseKey | Uint8Array }): MaybePromise<boolean>
     }
   }
 
   x509: {
-    getIssuerNameField: (input: { certificate: Uint8Array; field: string }) => string[]
+    getIssuerNameField: Sign1Context['x509']['getIssuerNameField']
 
-    getPublicKey: (input: { certificate: Uint8Array; alg: string }) => MaybePromise<CoseKey>
+    getPublicKey: Sign1Context['x509']['getPublicKey']
 
     verifyCertificateChain: (input: {
       trustedCertificates: Uint8Array[]

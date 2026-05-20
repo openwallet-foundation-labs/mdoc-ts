@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import z from 'zod'
-import { CborStructure } from '../../cbor'
 import { zUint8Array } from '../../utils/zod'
 
 const oid4vpHandoverInfoEncodedSchema = z.tuple([z.string(), z.string(), zUint8Array.nullable(), z.string()])

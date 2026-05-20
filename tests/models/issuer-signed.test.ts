@@ -35,13 +35,19 @@ describe('Issuer signed', () => {
       family_name: 'Doe',
     })
 
-    const isSignatureValid = await issuerSigned.issuerAuth.verifySignature({}, mdocContext)
+    const isSignatureValid = await issuerSigned.issuerAuth.verifySignature(
+      {},
+      { x509: mdocContext.x509, verify: mdocContext.cose.sign1.verify }
+    )
 
     expect(isSignatureValid).toBeTruthy()
 
     const issuerSignedDecoded = IssuerSigned.fromEncodedForOid4Vci(encodedIssuerSigned)
 
-    const isSignatureValidFromDecoded = await issuerSignedDecoded.issuerAuth.verifySignature({}, mdocContext)
+    const isSignatureValidFromDecoded = await issuerSignedDecoded.issuerAuth.verifySignature(
+      {},
+      { x509: mdocContext.x509, verify: mdocContext.cose.sign1.verify }
+    )
     expect(isSignatureValidFromDecoded).toBeTruthy()
   })
 })

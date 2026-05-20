@@ -1,4 +1,4 @@
-import { CborStructure, type DecodedStructureType, type EncodedStructureType } from '../../cbor'
+import { CborStructure, type DecodedStructureType, type EncodedStructureType } from '@owf/cose'
 
 export abstract class Handover<EncodedStructure = unknown, DecodedStructure = EncodedStructure> extends CborStructure<
   EncodedStructure,

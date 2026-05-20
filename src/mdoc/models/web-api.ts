@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 
 // WebApi = [uint, tstr, tstr] - Array structure
 const webApiEncodedSchema = z.tuple([z.number(), z.string(), z.string()])
