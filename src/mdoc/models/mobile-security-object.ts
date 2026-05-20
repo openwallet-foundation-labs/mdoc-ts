@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { TypedMap, typedMap } from '../../utils'
 import { DeviceKeyInfo, type DeviceKeyInfoEncodedStructure } from './device-key-info'
 import type { DocType } from './doctype'
+import { Status, type StatusEncodedStructure } from './status'
 import { ValidityInfo, type ValidityInfoEncodedStructure } from './validity-info'
 import { ValueDigests, type ValueDigestsStructure } from './value-digests'
 
@@ -17,6 +18,9 @@ const mobileSecurityObjectSchema = typedMap([
   ['valueDigests', z.instanceof(ValueDigests)],
   ['deviceKeyInfo', z.instanceof(DeviceKeyInfo)],
   ['validityInfo', z.instanceof(ValidityInfo)],
+  // Optional Status, defined in ISO/IEC 18013-5 second edition (CD), 12.3.6.
+  // Carries Status List and/or Identifier List references for revocation.
+  ['status', z.instanceof(Status).exactOptional()],
 ])
 
 export type MobileSecurityObjectDecodedStructure = z.output<typeof mobileSecurityObjectSchema>
@@ -29,6 +33,7 @@ export type MobileSecurityObjectOptions = {
   valueDigests: ValueDigests
   validityInfo: ValidityInfo
   deviceKeyInfo: DeviceKeyInfo
+  status?: Status
 }
 
 export class MobileSecurityObject extends CborStructure<
@@ -51,6 +56,10 @@ export class MobileSecurityObject extends CborStructure<
           ValidityInfo.fromEncodedStructure(input.get('validityInfo') as ValidityInfoEncodedStructure)
         )
 
+        if (input.has('status')) {
+          map.set('status', Status.fromEncodedStructure(input.get('status') as StatusEncodedStructure))
+        }
+
         return map
       },
       encode: (output) => {
@@ -60,6 +69,11 @@ export class MobileSecurityObject extends CborStructure<
         map.set('valueDigests', output.get('valueDigests').encodedStructure)
         map.set('deviceKeyInfo', output.get('deviceKeyInfo').encodedStructure)
         map.set('validityInfo', output.get('validityInfo').encodedStructure)
+
+        const status = output.get('status')
+        if (status) {
+          map.set('status', status.encodedStructure)
+        }
 
         return map
       },
@@ -90,6 +104,10 @@ export class MobileSecurityObject extends CborStructure<
     return this.structure.get('deviceKeyInfo')
   }
 
+  public get status() {
+    return this.structure.get('status')
+  }
+
   public static create(options: MobileSecurityObjectOptions): MobileSecurityObject {
     // Property order MUST match spec: version, digestAlgorithm, valueDigests, deviceKeyInfo, docType, validityInfo
     const map: MobileSecurityObjectDecodedStructure = new TypedMap([
@@ -100,6 +118,10 @@ export class MobileSecurityObject extends CborStructure<
       ['docType', options.docType],
       ['validityInfo', options.validityInfo],
     ])
+
+    if (options.status) {
+      map.set('status', options.status)
+    }
 
     return this.fromDecodedStructure(map)
   }

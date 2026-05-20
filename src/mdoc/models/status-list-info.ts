@@ -1,0 +1,53 @@
+import { z } from 'zod'
+import { CborStructure } from '../../cbor'
+import { TypedMap, typedMap } from '../../utils'
+
+/**
+ * StatusListInfo carries a reference to an IETF Token Status List
+ * (draft-ietf-oauth-status-list) entry from inside the MSO's Status structure.
+ *
+ * Defined in ISO/IEC 18013-5 second edition (CD), 12.3.6.
+ */
+const statusListInfoSchema = typedMap([
+  ['uri', z.string()],
+  ['idx', z.number().int().nonnegative()],
+  ['certificate', z.instanceof(Uint8Array).exactOptional()],
+] as const)
+
+export type StatusListInfoDecodedStructure = z.output<typeof statusListInfoSchema>
+export type StatusListInfoEncodedStructure = z.input<typeof statusListInfoSchema>
+
+export type StatusListInfoOptions = {
+  uri: string
+  idx: number
+  certificate?: Uint8Array
+}
+
+export class StatusListInfo extends CborStructure<StatusListInfoEncodedStructure, StatusListInfoDecodedStructure> {
+  public static override get encodingSchema() {
+    return statusListInfoSchema
+  }
+
+  public get uri() {
+    return this.structure.get('uri')
+  }
+
+  public get idx() {
+    return this.structure.get('idx')
+  }
+
+  public get certificate() {
+    return this.structure.get('certificate')
+  }
+
+  public static create(options: StatusListInfoOptions): StatusListInfo {
+    const map: StatusListInfoDecodedStructure = new TypedMap([
+      ['uri', options.uri],
+      ['idx', options.idx],
+    ])
+    if (options.certificate) {
+      map.set('certificate', options.certificate)
+    }
+    return this.fromDecodedStructure(map)
+  }
+}

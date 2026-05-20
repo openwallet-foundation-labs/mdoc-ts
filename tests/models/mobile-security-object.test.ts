@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import { DeviceKeyInfo } from '../../src/mdoc/models/device-key-info'
+import { IdentifierListInfo } from '../../src/mdoc/models/identifier-list-info'
 import { MobileSecurityObject } from '../../src/mdoc/models/mobile-security-object'
+import { Status } from '../../src/mdoc/models/status'
+import { StatusListInfo } from '../../src/mdoc/models/status-list-info'
 import { ValidityInfo } from '../../src/mdoc/models/validity-info'
 import { ValueDigests } from '../../src/mdoc/models/value-digests'
 import { hex } from '../../src/utils'
@@ -19,5 +22,74 @@ describe('mobile security object', () => {
     expect(mobileSecurityObject.validityInfo).toBeInstanceOf(ValidityInfo)
     expect(mobileSecurityObject.valueDigests).toBeInstanceOf(ValueDigests)
     expect(mobileSecurityObject.deviceKeyInfo).toBeInstanceOf(DeviceKeyInfo)
+    expect(mobileSecurityObject.status).toBeUndefined()
+  })
+
+  test('round-trip with status list', () => {
+    const original = MobileSecurityObject.decode(hex.decode(cbor))
+    const withStatus = MobileSecurityObject.create({
+      digestAlgorithm: original.digestAlgorithm,
+      docType: original.docType,
+      valueDigests: original.valueDigests,
+      deviceKeyInfo: original.deviceKeyInfo,
+      validityInfo: original.validityInfo,
+      status: Status.create({
+        statusList: StatusListInfo.create({
+          uri: 'https://issuer.example/status/1',
+          idx: 42,
+        }),
+      }),
+    })
+
+    const decoded = MobileSecurityObject.decode(withStatus.encode())
+    expect(decoded.status).toBeInstanceOf(Status)
+    expect(decoded.status?.statusList?.uri).toBe('https://issuer.example/status/1')
+    expect(decoded.status?.statusList?.idx).toBe(42)
+    expect(decoded.status?.identifierList).toBeUndefined()
+  })
+
+  test('round-trip with identifier list', () => {
+    const original = MobileSecurityObject.decode(hex.decode(cbor))
+    const id = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8])
+    const withStatus = MobileSecurityObject.create({
+      digestAlgorithm: original.digestAlgorithm,
+      docType: original.docType,
+      valueDigests: original.valueDigests,
+      deviceKeyInfo: original.deviceKeyInfo,
+      validityInfo: original.validityInfo,
+      status: Status.create({
+        identifierList: IdentifierListInfo.create({
+          id,
+          uri: 'https://issuer.example/identifiers/1',
+        }),
+      }),
+    })
+
+    const decoded = MobileSecurityObject.decode(withStatus.encode())
+    expect(decoded.status?.identifierList?.uri).toBe('https://issuer.example/identifiers/1')
+    expect(decoded.status?.identifierList?.id).toEqual(id)
+    expect(decoded.status?.statusList).toBeUndefined()
+  })
+
+  test('round-trip with both status list and identifier list', () => {
+    const original = MobileSecurityObject.decode(hex.decode(cbor))
+    const withStatus = MobileSecurityObject.create({
+      digestAlgorithm: original.digestAlgorithm,
+      docType: original.docType,
+      valueDigests: original.valueDigests,
+      deviceKeyInfo: original.deviceKeyInfo,
+      validityInfo: original.validityInfo,
+      status: Status.create({
+        statusList: StatusListInfo.create({ uri: 'https://issuer.example/status/1', idx: 7 }),
+        identifierList: IdentifierListInfo.create({
+          id: new Uint8Array([0xab, 0xcd]),
+          uri: 'https://issuer.example/identifiers/1',
+        }),
+      }),
+    })
+
+    const decoded = MobileSecurityObject.decode(withStatus.encode())
+    expect(decoded.status?.statusList?.idx).toBe(7)
+    expect(decoded.status?.identifierList?.id).toEqual(new Uint8Array([0xab, 0xcd]))
   })
 })
