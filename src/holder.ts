@@ -42,6 +42,17 @@ export class Holder {
       deviceRequest: Uint8Array | DeviceRequest
       sessionTranscript: Uint8Array | SessionTranscript
       verificationCallback?: VerificationCallback
+      /**
+       * Trust anchors for the reader's certificate chain. When provided, each
+       * `DocRequest.readerAuth` chain is validated against these anchors (e.g.
+       * CAs listed in a RICAL — Reader Identification CA List, defined in
+       * ISO/IEC 18013-5 second edition Annex F).
+       *
+       * When omitted, reader-auth signatures are verified but chain trust is
+       * not established — equivalent to first-edition behaviour.
+       */
+      trustedReaderCertificates?: Array<Uint8Array>
+      now?: Date
     },
     ctx: Pick<MdocContext, 'cose' | 'x509'>
   ) {
@@ -63,6 +74,8 @@ export class Holder {
             sessionTranscript,
           },
           verificationCallback: options.verificationCallback,
+          trustedCertificates: options.trustedReaderCertificates,
+          now: options.now,
         },
         ctx
       )
