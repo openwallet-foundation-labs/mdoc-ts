@@ -1,5 +1,5 @@
+import type { CoseKey } from '@owf/cose'
 import type { MdocContext } from './context.js'
-import type { CoseKey } from './cose/index.js'
 import type { VerificationCallback } from './mdoc/check-callback.js'
 import { type DeviceRequest, DeviceResponse, type SessionTranscript } from './mdoc/index.js'
 

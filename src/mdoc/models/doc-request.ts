@@ -1,5 +1,5 @@
+import { CborStructure, DataItem } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure, DataItem } from '../../cbor'
 import { TypedMap, typedMap } from '../../utils'
 import { ItemsRequest, type ItemsRequestEncodedStructure } from './items-request'
 import { ReaderAuth, type ReaderAuthEncodedStructure } from './reader-auth'

@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 import { TypedMap, typedMap } from '../../utils'
 import { DeviceSigned, type DeviceSignedEncodedStructure } from './device-signed'
 import type { DocType } from './doctype'

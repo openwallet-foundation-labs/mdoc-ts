@@ -1,12 +1,12 @@
-import type { MdocContext } from '../../context'
 import {
   type CoseKey,
   type DigestAlgorithm,
-  Header,
   ProtectedHeaders,
+  RegisteredCwtHeaderClaimKey,
   type SignatureAlgorithm,
   UnprotectedHeaders,
-} from '../../cose'
+} from '@owf/cose'
+import type { MdocContext } from '../../context'
 import { randomUnsignedInteger } from '../../utils/randomUnsignedInteger'
 import { AtLeastOneCertificateRequiredError, SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError } from '../errors'
 import {
@@ -114,28 +114,31 @@ export class IssuerSignedBuilder {
     })
 
     const protectedHeaders = ProtectedHeaders.create({
-      protectedHeaders: new Map([[Header.Algorithm, options.algorithm]]),
+      protectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm]]),
     })
 
     const unprotectedHeaders = UnprotectedHeaders.create({
       unprotectedHeaders: new Map([
-        [Header.X5Chain, options.certificates.length === 1 ? options.certificates[0] : options.certificates],
+        [
+          RegisteredCwtHeaderClaimKey.X5Chain,
+          options.certificates.length === 1 ? options.certificates[0] : options.certificates,
+        ],
       ]),
     })
 
     if (options.signingKey.keyId) {
-      unprotectedHeaders.headers?.set(Header.KeyId, options.signingKey.keyId)
+      unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.signingKey.keyId)
     }
 
-    const issuerAuth = await IssuerAuth.create(
+    const issuerAuth = await IssuerAuth.create({
+      payload: mso,
+      unprotectedHeaders,
+      protectedHeaders,
+    }).sign(
+      { signingKey: options.signingKey, algorithm: options.algorithm },
       {
-        payload: mso,
-        unprotectedHeaders,
-        protectedHeaders,
-        signingKey: options.signingKey,
-        algorithm: options.algorithm,
-      },
-      this.ctx
+        sign: this.ctx.cose.sign1.sign,
+      }
     )
 
     return IssuerSigned.create({

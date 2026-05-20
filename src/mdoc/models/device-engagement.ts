@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 import { TypedMap, typedMap } from '../../utils'
 import { DeviceRetrievalMethod, type DeviceRetrievalMethodEncodedStructure } from './device-retrieval-method'
 import { ProtocolInfo, type ProtocolInfoStructure } from './protocol-info'

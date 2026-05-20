@@ -1,5 +1,5 @@
+import { CoseKey, type DigestAlgorithm, type SignatureAlgorithm } from '@owf/cose'
 import type { MdocContext } from './context'
-import { CoseKey, type DigestAlgorithm, type SignatureAlgorithm } from './cose'
 import type {
   DeviceKeyInfo,
   DeviceKeyInfoOptions,

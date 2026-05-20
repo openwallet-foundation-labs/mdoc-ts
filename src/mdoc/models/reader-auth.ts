@@ -1,5 +1,5 @@
+import { Sign1, type Sign1DecodedStructure, type Sign1EncodedStructure, type Sign1Options } from '@owf/cose'
 import type { MdocContext } from '../../context'
-import { Sign1, type Sign1DecodedStructure, type Sign1EncodedStructure, type Sign1Options } from '../../cose/sign1'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback'
 import { ReaderAuthentication, type ReaderAuthenticationOptions } from './reader-authentication'
 
@@ -26,7 +26,7 @@ export class ReaderAuth extends Sign1 {
 
     this.detachedPayload = readerAuthentication.encode({ asDataItem: true })
 
-    const isValid = await this.verifySignature({}, ctx)
+    const isValid = await this.verifySignature({}, { verify: ctx.cose.sign1.verify, x509: ctx.x509 })
 
     onCheck({
       status: isValid ? 'PASSED' : 'FAILED',
@@ -35,8 +35,7 @@ export class ReaderAuth extends Sign1 {
     })
   }
 
-  // TODO: super should be generic, so we don't need this
-  public static create(options: ReaderAuthOptions, ctx: Pick<MdocContext, 'cose'>) {
-    return super.create(options, ctx) as Promise<ReaderAuth>
+  public static create(options: ReaderAuthOptions) {
+    return super.create(options) as ReaderAuth
   }
 }

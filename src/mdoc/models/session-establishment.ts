@@ -1,7 +1,7 @@
+import { CborStructure, DataItem } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure, DataItem } from '../../cbor'
 import type { MdocContext } from '../../context'
-import { TypedMap, typedMap } from '../../utils'
+import { stringToBytes, TypedMap, typedMap } from '../../utils'
 import { zUint8Array } from '../../utils/zod'
 import type { EDeviceKey } from './e-device-key'
 import { EReaderKey } from './e-reader-key'
@@ -59,11 +59,12 @@ export class SessionEstablishment extends CborStructure<
     },
     ctx: Pick<MdocContext, 'crypto'>
   ) {
-    const _key = await ctx.crypto.calculateEphemeralMacKey({
+    const _key = await ctx.crypto.hdkf({
+      digestAlgorithm: 'SHA-256',
       privateKey: options.eDeviceKeyPrivate.privateKey,
       publicKey: options.eReaderKeyPublic.publicKey,
-      sessionTranscriptBytes: options.sessionTranscript.encode({ asDataItem: true }),
-      info: 'SKReader',
+      salt: options.sessionTranscript.encode({ asDataItem: true }),
+      info: stringToBytes('SKReader'),
     })
 
     // TODO: we need to add a ctx.crypto.decrypt method

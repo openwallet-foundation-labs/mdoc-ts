@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import z from 'zod'
-import { CborStructure } from '../../cbor'
 import { ErrorItems, errorItemsSchema } from './error-items'
 
 const errorsEncodedSchema = z.map(z.string(), errorItemsSchema)

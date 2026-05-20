@@ -1,8 +1,13 @@
+import {
+  CosePayloadMustBeDefinedError,
+  cborDecode,
+  DataItem,
+  Sign1,
+  type Sign1EncodedStructure,
+  type Sign1Options,
+} from '@owf/cose'
 import z from 'zod'
-import { cborDecode, DataItem } from '../../cbor/index.js'
 import type { MdocContext } from '../../context.js'
-import { CosePayloadMustBeDefinedError } from '../../cose/error.js'
-import { Sign1, type Sign1EncodedStructure, type Sign1Options } from '../../cose/sign1.js'
 import { zUint8Array } from '../../utils/zod.js'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback.js'
 import { MobileSecurityObject, type MobileSecurityObjectEncodedStructure } from './mobile-security-object.js'
@@ -13,17 +18,14 @@ export type IssuerAuthOptions = Omit<Sign1Options, 'payload'> & {
 }
 
 export class IssuerAuth extends Sign1 {
-  public static create(options: IssuerAuthOptions, ctx: Pick<MdocContext, 'cose'>): Promise<IssuerAuth> {
-    return super.create(
-      {
-        ...options,
-        payload:
-          options.payload instanceof MobileSecurityObject
-            ? options.payload.encode({ asDataItem: true })
-            : options.payload,
-      },
-      ctx
-    ) as Promise<IssuerAuth>
+  public static create(options: IssuerAuthOptions): IssuerAuth {
+    return super.create({
+      ...options,
+      payload:
+        options.payload instanceof MobileSecurityObject
+          ? options.payload.encode({ asDataItem: true })
+          : options.payload,
+    }) as IssuerAuth
   }
 
   // NOTE: currently lazy loaded and validated, but i think that's fine?
@@ -96,7 +98,7 @@ export class IssuerAuth extends Sign1 {
       }
     }
 
-    const isSignatureValid = await this.verifySignature({}, ctx)
+    const isSignatureValid = await this.verifySignature({}, { x509: ctx.x509, verify: ctx.cose.sign1.verify })
 
     onCheck({
       status: isSignatureValid ? 'PASSED' : 'FAILED',

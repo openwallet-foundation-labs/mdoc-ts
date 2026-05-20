@@ -1,7 +1,6 @@
+import { CborStructure, type CoseKey, MacAlgorithm } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 import type { MdocContext } from '../../context'
-import { type CoseKey, MacAlgorithm } from '../../cose'
 import { TypedMap, typedMap } from '../../utils'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback'
 import { DeviceAuthentication } from './device-authentication'

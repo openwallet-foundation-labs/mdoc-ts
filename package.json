@@ -60,8 +60,8 @@
     "m-doc-cbor-iso-18013-5-decoder"
   ],
   "dependencies": {
-    "cbor-x": "^1.6.4",
-    "zod": "^4.3.6",
+    "@owf/cose": "0.3.0-alpha-20260520135058",
+    "zod": "^4.4.3",
     "zod-validation-error": "^5.0.0"
   }
 }

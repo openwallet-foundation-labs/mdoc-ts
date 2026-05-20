@@ -6,7 +6,7 @@ import { hkdf } from '@panva/hkdf'
 import * as x509 from '@peculiar/x509'
 import { X509Certificate } from '@peculiar/x509'
 import { exportJWK, importX509 } from 'jose'
-import { CoseKey, hex, KeyOps, KeyType, MacAlgorithm, type MdocContext, stringToBytes } from '../src'
+import { CoseKey, hex, type MdocContext } from '../src'
 
 export const mdocContext: MdocContext = {
   crypto: {
@@ -18,23 +18,11 @@ export const mdocContext: MdocContext = {
     random: (length: number) => {
       return crypto.getRandomValues(new Uint8Array(length))
     },
-    calculateEphemeralMacKey: async (input) => {
-      const { privateKey, publicKey, sessionTranscriptBytes, info } = input
+    hdkf: async (input) => {
+      const { digestAlgorithm: da, salt, info, publicKey, privateKey } = input
       const ikm = p256.getSharedSecret(privateKey, publicKey, true).slice(1)
-      // Need to cast as Uint8Array<ArrayBuffer> since newer TypeScript versions made Uint8Array generic
-      const salt = new Uint8Array(
-        await crypto.subtle.digest('SHA-256', sessionTranscriptBytes as Uint8Array<ArrayBuffer>)
-      )
-      const infoAsBytes = stringToBytes(info)
-      const digest = 'sha256'
-      const result = await hkdf(digest, ikm, salt, infoAsBytes, 32)
-
-      return CoseKey.create({
-        keyOps: [KeyOps.Sign, KeyOps.Verify],
-        keyType: KeyType.Oct,
-        k: result,
-        algorithm: MacAlgorithm.HS256,
-      })
+      const digestAlgorithm = da === 'SHA-384' ? 'sha384' : da === 'SHA-512' ? 'sha512' : 'sha256'
+      return await hkdf(digestAlgorithm, ikm, salt, info, 32)
     },
   },
 
@@ -42,12 +30,14 @@ export const mdocContext: MdocContext = {
     mac0: {
       sign: async (input) => {
         const { key, toBeAuthenticated } = input
-        return hmac(sha256, key.privateKey, toBeAuthenticated)
+        return hmac(sha256, key, toBeAuthenticated)
       },
       verify: async (input) => {
         const { mac0, key } = input
-
-        return timingSafeEqual(mac0.tag, hmac(sha256, key.privateKey, mac0.toBeAuthenticated))
+        return timingSafeEqual(
+          mac0.tag,
+          hmac(sha256, key instanceof CoseKey ? key.privateKey : key, mac0.toBeAuthenticated)
+        )
       },
     },
     sign1: {
@@ -59,24 +49,26 @@ export const mdocContext: MdocContext = {
         const { sign1, key } = input
 
         // lowS is needed after upgrade of @noble/curves to keep existing tests passing
-        return p256.verify(sign1.signature, sign1.toBeSigned, key.publicKey, { lowS: false })
+        return p256.verify(sign1.signature, sign1.toBeSigned, key instanceof CoseKey ? key.publicKey : key, {
+          lowS: false,
+        })
       },
     },
   },
 
   x509: {
-    getIssuerNameField: (input: { certificate: Uint8Array; field: string }) => {
+    getIssuerNameField: (input) => {
       const certificate = new X509Certificate(input.certificate)
       return certificate.issuerName.getField(input.field)
     },
-    getPublicKey: async (input: { certificate: Uint8Array; alg: string }) => {
+    getPublicKey: async (input) => {
       const certificate = new X509Certificate(input.certificate)
 
       const key = await importX509(certificate.toString(), input.alg, {
         extractable: true,
       })
 
-      return CoseKey.fromJwk((await exportJWK(key)) as unknown as Record<string, unknown>)
+      return CoseKey.fromJwk((await exportJWK(key)) as unknown as Record<string, unknown>).publicKey
     },
 
     verifyCertificateChain: async (input: {

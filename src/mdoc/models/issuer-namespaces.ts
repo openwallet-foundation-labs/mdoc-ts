@@ -1,5 +1,5 @@
+import { CborStructure, DataItem } from '@owf/cose'
 import z from 'zod'
-import { CborStructure, DataItem } from '../../cbor'
 import { IssuerSignedItem, type IssuerSignedItemEncodedStructure } from './issuer-signed-item'
 
 export const issuerNamespacesEncodedSchema = z.map(z.string(), z.array(z.instanceof(DataItem)))

@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 
 // KeyInfo uses integer keys (Map<number, unknown>)
 // Per spec: KeyInfo = { * int => any }

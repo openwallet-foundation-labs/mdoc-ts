@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 import { typedMap } from '../../utils'
 
 // Zod schema for ValidityInfo validation

@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { cborDecode } from '../../src'
-import { BleOptions } from '../../src/mdoc/models/ble-options'
+import { BleOptions, cborDecode } from '../../src'
 import {
   DeviceRetrievalMethod,
   type DeviceRetrievalMethodEncodedStructure,

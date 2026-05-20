@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 import type { MdocContext } from '../../context'
 import { compareBytes, typedMap } from '../../utils'
 import { zUint8Array } from '../../utils/zod'

@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 import { DeviceSignedItems, type DeviceSignedItemsStructure, deviceSignedItemsSchema } from './device-signed-items'
 import type { Namespace } from './namespace'
 

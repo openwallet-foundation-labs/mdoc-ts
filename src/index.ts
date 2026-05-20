@@ -1,6 +1,20 @@
-export { cborDecode, cborEncode, DataItem, DateOnly } from './cbor'
+export {
+  CoseKey,
+  Curve,
+  cborDecode,
+  cborEncode,
+  DateOnly,
+  KeyOps,
+  KeyType,
+  Mac0,
+  ProtectedHeaders,
+  RegisteredCwtClaimKey,
+  RegisteredCwtHeaderClaimKey,
+  Sign1,
+  SignatureAlgorithm,
+  UnprotectedHeaders,
+} from '@owf/cose'
 export * from './context'
-export * from './cose'
 export * from './holder'
 export * from './issuer'
 export * from './mdoc'
