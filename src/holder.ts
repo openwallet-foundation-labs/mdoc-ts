@@ -51,7 +51,11 @@ export class Holder {
        * When omitted, reader-auth signatures are verified but chain trust is
        * not established — equivalent to first-edition behaviour.
        */
-      trustedReaderCertificates?: Array<Uint8Array>
+      trustedCertificates?: Array<Uint8Array>
+      /**
+       * Reference time for certificate `notBefore`/`notAfter` checks during
+       * chain validation. Defaults to the current time.
+       */
       now?: Date
     },
     ctx: Pick<MdocContext, 'cose' | 'x509'>
@@ -74,7 +78,7 @@ export class Holder {
             sessionTranscript,
           },
           verificationCallback: options.verificationCallback,
-          trustedCertificates: options.trustedReaderCertificates,
+          trustedCertificates: options.trustedCertificates,
           now: options.now,
         },
         ctx

@@ -9,11 +9,14 @@ import { zUint8Array } from '../../utils/zod'
  *
  * Defined in ISO/IEC 18013-5 second edition (CD), 12.3.6.
  */
+// NOTE: idx is `uint` in the spec (unbounded CBOR uint). We constrain to JS
+// safe-integer range here, which is more than enough for real-world status
+// list sizes (Number.MAX_SAFE_INTEGER is ~9 × 10^15).
 const statusListInfoSchema = typedMap([
   ['uri', z.string()],
   ['idx', z.number().int().nonnegative()],
   ['certificate', zUint8Array.exactOptional()],
-] as const)
+])
 
 export type StatusListInfoDecodedStructure = z.output<typeof statusListInfoSchema>
 export type StatusListInfoEncodedStructure = z.input<typeof statusListInfoSchema>

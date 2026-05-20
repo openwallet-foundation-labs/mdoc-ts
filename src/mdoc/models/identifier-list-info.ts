@@ -18,7 +18,7 @@ const identifierListInfoSchema = typedMap([
   ['id', zUint8Array],
   ['uri', z.string()],
   ['certificate', zUint8Array.exactOptional()],
-] as const)
+])
 
 export type IdentifierListInfoDecodedStructure = z.output<typeof identifierListInfoSchema>
 export type IdentifierListInfoEncodedStructure = z.input<typeof identifierListInfoSchema>
