@@ -21,6 +21,8 @@ import {
   IssuerSignedItem,
   MobileSecurityObject,
   type Namespace,
+  Status,
+  type StatusOptions,
   ValidityInfo,
   type ValidityInfoOptions,
   ValueDigests,
@@ -84,6 +86,13 @@ export class IssuerSignedBuilder {
     validityInfo: ValidityInfo | ValidityInfoOptions
     deviceKeyInfo: DeviceKeyInfo | DeviceKeyInfoOptions
     certificates: Uint8Array[]
+    /**
+     * Optional Status structure to embed in the MSO. See
+     * ISO/IEC 18013-5 second edition (CD), 12.3.6. Allows the issuer to
+     * publish revocation information via a status list and/or identifier
+     * list referenced from inside the signed MSO.
+     */
+    status?: Status | StatusOptions
   }): Promise<IssuerSigned> {
     if (options.signingKey.algorithm && options.signingKey.algorithm !== options.algorithm) {
       throw new SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError(
@@ -105,12 +114,20 @@ export class IssuerSignedBuilder {
       )
     }
 
+    const status =
+      options.status === undefined
+        ? undefined
+        : options.status instanceof Status
+          ? options.status
+          : Status.create(options.status)
+
     const mso = MobileSecurityObject.create({
       docType: this.docType,
       validityInfo,
       digestAlgorithm: options.digestAlgorithm,
       deviceKeyInfo,
       valueDigests: await this.convertIssuerNamespacesIntoValueDigests(options.digestAlgorithm),
+      status,
     })
 
     const protectedHeaders = ProtectedHeaders.create({

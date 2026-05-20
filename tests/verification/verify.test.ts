@@ -13,6 +13,8 @@ import {
   ItemsRequest,
   SessionTranscript,
   SignatureAlgorithm,
+  Status,
+  StatusListInfo,
   Verifier,
 } from '../../src'
 import { Handover } from '../../src/mdoc/models/handover'
@@ -516,5 +518,39 @@ suite('Verification', () => {
         mdocContext
       )
     ).rejects.toThrow()
+  })
+
+  test('Issue mdoc with embedded Status (status_list)', async () => {
+    const issuer = new Issuer('org.iso.18013.5.1', mdocContext)
+    issuer.addIssuerNamespace('org.iso.18013.5.1.mDL', { first_name: 'First', last_name: 'Last' })
+
+    const issuerSigned = await issuer.sign({
+      signingKey: CoseKey.fromJwk(ISSUER_PRIVATE_KEY_JWK),
+      certificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+      algorithm: SignatureAlgorithm.ES256,
+      digestAlgorithm: 'SHA-256',
+      deviceKeyInfo: { deviceKey: DeviceKey.fromJwk(DEVICE_JWK_PUBLIC) },
+      validityInfo: { signed, validFrom, validUntil },
+      status: Status.create({
+        statusList: StatusListInfo.create({ uri: 'https://issuer.example/status/1', idx: 42 }),
+      }),
+    })
+
+    // Verify the signed credential still validates end-to-end.
+    await expect(
+      Holder.verifyIssuerSigned(
+        {
+          issuerSigned: IssuerSigned.fromEncodedForOid4Vci(issuerSigned.encodedForOid4Vci),
+          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+        },
+        mdocContext
+      )
+    ).resolves.toBeUndefined()
+
+    // The Status payload survived signing + decode.
+    const mso = issuerSigned.issuerAuth.mobileSecurityObject
+    expect(mso.status).toBeInstanceOf(Status)
+    expect(mso.status?.statusList?.uri).toBe('https://issuer.example/status/1')
+    expect(mso.status?.statusList?.idx).toBe(42)
   })
 })
