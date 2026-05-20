@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { CborStructure } from '../../cbor'
 import { TypedMap, typedMap } from '../../utils'
+import { zUint8Array } from '../../utils/zod'
 
 /**
  * StatusListInfo carries a reference to an IETF Token Status List
@@ -11,7 +12,7 @@ import { TypedMap, typedMap } from '../../utils'
 const statusListInfoSchema = typedMap([
   ['uri', z.string()],
   ['idx', z.number().int().nonnegative()],
-  ['certificate', z.instanceof(Uint8Array).exactOptional()],
+  ['certificate', zUint8Array.exactOptional()],
 ] as const)
 
 export type StatusListInfoDecodedStructure = z.output<typeof statusListInfoSchema>
