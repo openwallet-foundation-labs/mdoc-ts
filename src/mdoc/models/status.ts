@@ -24,7 +24,7 @@ import { StatusListInfo, type StatusListInfoEncodedStructure } from './status-li
 const statusSchema = typedMap([
   ['status_list', z.instanceof(StatusListInfo).exactOptional()],
   ['identifier_list', z.instanceof(IdentifierListInfo).exactOptional()],
-] as const)
+])
 
 export type StatusDecodedStructure = z.output<typeof statusSchema>
 export type StatusEncodedStructure = z.input<typeof statusSchema>
