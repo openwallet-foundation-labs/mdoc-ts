@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { CborStructure } from '../../cbor'
 import { TypedMap, typedMap } from '../../utils'
+import { zUint8Array } from '../../utils/zod'
 
 /**
  * IdentifierListInfo carries an opaque per-MSO identifier and the location of
@@ -14,9 +15,9 @@ import { TypedMap, typedMap } from '../../utils'
  * is valid.
  */
 const identifierListInfoSchema = typedMap([
-  ['id', z.instanceof(Uint8Array)],
+  ['id', zUint8Array],
   ['uri', z.string()],
-  ['certificate', z.instanceof(Uint8Array).exactOptional()],
+  ['certificate', zUint8Array.exactOptional()],
 ] as const)
 
 export type IdentifierListInfoDecodedStructure = z.output<typeof identifierListInfoSchema>
