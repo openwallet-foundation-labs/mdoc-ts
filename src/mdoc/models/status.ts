@@ -49,9 +49,7 @@ export class Status extends CborStructure<StatusEncodedStructure, StatusDecodedS
         if (input.has('identifier_list')) {
           map.set(
             'identifier_list',
-            IdentifierListInfo.fromEncodedStructure(
-              input.get('identifier_list') as IdentifierListInfoEncodedStructure
-            )
+            IdentifierListInfo.fromEncodedStructure(input.get('identifier_list') as IdentifierListInfoEncodedStructure)
           )
         }
         return map
