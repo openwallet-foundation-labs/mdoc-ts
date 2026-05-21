@@ -26,6 +26,11 @@
     "release": "pnpm build && pnpm changeset publish --no-git-tag",
     "changeset-version": "pnpm changeset version && pnpm style:fix"
   },
+  "dependencies": {
+    "@owf/cose": "0.3.0-alpha-20260521082539",
+    "zod": "^4.4.3",
+    "zod-validation-error": "^5.0.0"
+  },
   "devDependencies": {
     "@biomejs/biome": "2.4.9",
     "@changesets/cli": "^2.30.0",
@@ -58,10 +63,5 @@
     "m-doc-cbor-iso-18013-5-validator",
     "m-doc-cbor-iso-18013-5-encoder",
     "m-doc-cbor-iso-18013-5-decoder"
-  ],
-  "dependencies": {
-    "@owf/cose": "0.3.0-alpha-20260520135058",
-    "zod": "^4.4.3",
-    "zod-validation-error": "^5.0.0"
-  }
+  ]
 }

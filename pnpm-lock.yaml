@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@owf/cose':
-        specifier: 0.3.0-alpha-20260520135058
-        version: 0.3.0-alpha-20260520135058
+        specifier: 0.3.0-alpha-20260521082539
+        version: 0.3.0-alpha-20260521082539
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -436,11 +436,11 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@owf/cose@0.3.0-alpha-20260520135058':
-    resolution: {integrity: sha512-fXYbFoE07XAO0jAk7jhrdbaXMVQFd72rrXqc0v0eJL9QRzS6klDFTgYtg6FI5U1YnQItaN7rQOLf/3US8lXiOw==}
+  '@owf/cose@0.3.0-alpha-20260521082539':
+    resolution: {integrity: sha512-1oOgQ64bfHJKf+y8VlmVU7KUxa6gvyNan8Dh0nM6dgclwaBI/O4VUxJMX82ozBDiInFIkRKRi925cMx0b1s/jA==}
 
-  '@owf/identity-common@0.3.0-alpha-20260520135058':
-    resolution: {integrity: sha512-Zm4UeCY1ehEJ6YaPuPkwiHXY3neAog3xs3FMNWrO3TMRnkW/wuTM+j1p6QrLUL3CXdh/aFbj0bBsBSTeczPcmA==}
+  '@owf/identity-common@0.3.0-alpha-20260521082539':
+    resolution: {integrity: sha512-1Eb78KmXqOm4jTwBLxJL1dYsuKj7Q16EEAtUjo7qYwV6+FNl8jAtZueeprNAqO7sfh/mA2twqutgmr11vCsoIg==}
 
   '@oxc-project/types@0.127.0':
     resolution: {integrity: sha512-aIYXQBo4lCbO4z0R3FHeucQHpF46l2LbMdxRvqvuRuW2OxdnSkcng5B8+K12spgLDj93rtN3+J2Vac/TIO+ciQ==}
@@ -1777,14 +1777,14 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
 
-  '@owf/cose@0.3.0-alpha-20260520135058':
+  '@owf/cose@0.3.0-alpha-20260521082539':
     dependencies:
-      '@owf/identity-common': 0.3.0-alpha-20260520135058
+      '@owf/identity-common': 0.3.0-alpha-20260521082539
       cbor-x: 1.6.4
       zod: 4.4.3
       zod-validation-error: 5.0.0(zod@4.4.3)
 
-  '@owf/identity-common@0.3.0-alpha-20260520135058': {}
+  '@owf/identity-common@0.3.0-alpha-20260521082539': {}
 
   '@oxc-project/types@0.127.0': {}
 
@@ -2594,11 +2594,11 @@ snapshots:
   vite@7.3.1(@types/node@25.9.1)(jiti@2.6.1):
     dependencies:
       esbuild: 0.27.3
-      fdir: 6.5.0(picomatch@4.0.3)
-      picomatch: 4.0.3
+      fdir: 6.5.0(picomatch@4.0.4)
+      picomatch: 4.0.4
       postcss: 8.5.6
       rollup: 4.54.0
-      tinyglobby: 0.2.15
+      tinyglobby: 0.2.16
     optionalDependencies:
       '@types/node': 25.9.1
       fsevents: 2.3.3
