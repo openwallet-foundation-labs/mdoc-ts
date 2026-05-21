@@ -1,5 +1,5 @@
+import { CborStructure } from '@owf/cose'
 import { z } from 'zod'
-import { CborStructure } from '../../cbor'
 import { TypedMap, typedMap } from '../../utils'
 import { IdentifierListInfo, type IdentifierListInfoEncodedStructure } from './identifier-list-info'
 import { StatusListInfo, type StatusListInfoEncodedStructure } from './status-list-info'
