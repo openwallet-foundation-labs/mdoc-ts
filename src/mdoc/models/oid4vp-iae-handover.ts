@@ -1,6 +1,6 @@
+import { zUint8Array } from '@owf/cose'
 import z from 'zod'
 import type { MdocContext } from '../../context'
-import { zUint8Array } from '../../utils/zod'
 import { Handover } from './handover'
 import type { Oid4vpIaeHandoverInfo } from './oid4vp-iae-handover-info'
 

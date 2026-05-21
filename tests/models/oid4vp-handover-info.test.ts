@@ -1,5 +1,5 @@
+import { hex } from '@owf/identity-common'
 import { expect, suite, test } from 'vitest'
-import { hex } from '../../src'
 import { Oid4vpHandoverInfo } from '../../src/mdoc/models/oid4vp-handover-info'
 
 const cbor =

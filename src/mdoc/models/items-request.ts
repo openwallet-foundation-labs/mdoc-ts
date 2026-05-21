@@ -1,6 +1,5 @@
-import { CborStructure } from '@owf/cose'
+import { CborStructure, typedMap } from '@owf/cose'
 import { z } from 'zod'
-import { typedMap } from '../../utils'
 import type { DataElementIdentifier } from './data-element-identifier'
 import type { DocType } from './doctype'
 import type { IntentToRetain } from './intent-to-retain'

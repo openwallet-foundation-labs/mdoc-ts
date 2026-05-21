@@ -1,6 +1,5 @@
-import { CborStructure } from '@owf/cose'
+import { CborStructure, TypedMap, typedMap } from '@owf/cose'
 import { z } from 'zod'
-import { TypedMap, typedMap } from '../../utils'
 import { DocRequest, type DocRequestEncodedStructure } from './doc-request'
 
 const deviceRequestSchema = typedMap([

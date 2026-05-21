@@ -1,6 +1,5 @@
-import { CborStructure } from '@owf/cose'
+import { CborStructure, typedMap } from '@owf/cose'
 import { z } from 'zod'
-import { typedMap } from '../../utils'
 
 enum NfcOptionsKeys {
   MaxCommandDataLength = 0,

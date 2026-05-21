@@ -6,8 +6,8 @@ import {
   type SignatureAlgorithm,
   UnprotectedHeaders,
 } from '@owf/cose'
+import { base64, stringToBytes } from '@owf/identity-common'
 import type { MdocContext } from '../../context'
-import { base64, stringToBytes } from '../../utils'
 import {
   DeviceAuth,
   DeviceMac,

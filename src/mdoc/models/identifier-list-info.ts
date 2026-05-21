@@ -1,7 +1,5 @@
-import { CborStructure } from '@owf/cose'
+import { CborStructure, TypedMap, typedMap, zUint8Array } from '@owf/cose'
 import { z } from 'zod'
-import { TypedMap, typedMap } from '../../utils'
-import { zUint8Array } from '../../utils/zod'
 
 /**
  * IdentifierListInfo carries an opaque per-MSO identifier and the location of

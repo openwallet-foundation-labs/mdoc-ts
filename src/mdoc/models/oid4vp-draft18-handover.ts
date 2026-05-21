@@ -1,7 +1,6 @@
-import { cborEncode } from '@owf/cose'
+import { cborEncode, zUint8Array } from '@owf/cose'
 import z from 'zod'
 import type { MdocContext } from '../../context'
-import { zUint8Array } from '../../utils/zod'
 import { Handover } from './handover'
 
 const oid4vpDraft18HandoverEncodedSchema = z.tuple([zUint8Array, zUint8Array, z.string()])

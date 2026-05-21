@@ -1,5 +1,6 @@
+import { hex } from '@owf/identity-common'
 import { describe, expect, test } from 'vitest'
-import { hex, NfcHandover } from '../../src'
+import { NfcHandover } from '../../src'
 import { ReaderAuthentication } from '../../src/mdoc/models/reader-authentication'
 
 const cbor =

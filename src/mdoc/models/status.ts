@@ -1,8 +1,7 @@
-import { CborStructure } from '@owf/cose'
+import { CborStructure, TypedMap, typedMap } from '@owf/cose'
+import { StatusListInfo, type StatusListInfoEncodedStructure } from '@owf/token-status-list'
 import { z } from 'zod'
-import { TypedMap, typedMap } from '../../utils'
 import { IdentifierListInfo, type IdentifierListInfoEncodedStructure } from './identifier-list-info'
-import { StatusListInfo, type StatusListInfoEncodedStructure } from './status-list-info'
 
 /**
  * Status references one or both of the revocation mechanisms defined in

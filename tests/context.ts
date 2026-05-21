@@ -2,11 +2,12 @@ import crypto, { timingSafeEqual } from 'node:crypto'
 import { p256 } from '@noble/curves/nist.js'
 import { hmac } from '@noble/hashes/hmac.js'
 import { sha256 } from '@noble/hashes/sha2.js'
+import { hex } from '@owf/identity-common'
 import { hkdf } from '@panva/hkdf'
 import * as x509 from '@peculiar/x509'
 import { X509Certificate } from '@peculiar/x509'
 import { exportJWK, importX509 } from 'jose'
-import { CoseKey, hex, type MdocContext } from '../src'
+import { CoseKey, type MdocContext } from '../src'
 
 export const mdocContext: MdocContext = {
   crypto: {

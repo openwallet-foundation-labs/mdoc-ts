@@ -1,8 +1,8 @@
 import { cborDecode, cborEncode, DataItem } from '@owf/cose'
 import { describe, expect, test } from 'vitest'
+import { StatusListInfo } from '../../src'
 import { IdentifierListInfo } from '../../src/mdoc/models/identifier-list-info'
 import { Status } from '../../src/mdoc/models/status'
-import { StatusListInfo } from '../../src/mdoc/models/status-list-info'
 
 describe('StatusListInfo', () => {
   test('round-trip uri + idx', () => {

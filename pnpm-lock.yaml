@@ -9,8 +9,14 @@ importers:
   .:
     dependencies:
       '@owf/cose':
-        specifier: 0.3.0-alpha-20260521082539
-        version: 0.3.0-alpha-20260521082539
+        specifier: 0.3.0-alpha-20260521133622
+        version: 0.3.0-alpha-20260521133622
+      '@owf/identity-common':
+        specifier: 0.3.0-alpha-20260521133622
+        version: 0.3.0-alpha-20260521133622
+      '@owf/token-status-list':
+        specifier: 0.3.0-alpha-20260521133622
+        version: 0.3.0-alpha-20260521133622
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -436,11 +442,14 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@owf/cose@0.3.0-alpha-20260521082539':
-    resolution: {integrity: sha512-1oOgQ64bfHJKf+y8VlmVU7KUxa6gvyNan8Dh0nM6dgclwaBI/O4VUxJMX82ozBDiInFIkRKRi925cMx0b1s/jA==}
+  '@owf/cose@0.3.0-alpha-20260521133622':
+    resolution: {integrity: sha512-CRK5YJV+pxFYjLogJj8ZYbDT/DxsOfN20pRkGYORbgt9QuE7U34OcFUBZTsDIwgIv6imlPbHFAlSDfsQqW9r0Q==}
 
-  '@owf/identity-common@0.3.0-alpha-20260521082539':
-    resolution: {integrity: sha512-1Eb78KmXqOm4jTwBLxJL1dYsuKj7Q16EEAtUjo7qYwV6+FNl8jAtZueeprNAqO7sfh/mA2twqutgmr11vCsoIg==}
+  '@owf/identity-common@0.3.0-alpha-20260521133622':
+    resolution: {integrity: sha512-cigNXzzPhO4O55UtSt5KfOxTLrz8nCBMeH4nE8dxbccEwEWUDssI79UxoshW58bcsy28pKTRjU18F1gVeOOmEQ==}
+
+  '@owf/token-status-list@0.3.0-alpha-20260521133622':
+    resolution: {integrity: sha512-exFfTeqLo9Jfp6726+hx2OK/N6AGz80DUuMhNyPMiOgrngp/FQblbVK1yLJJf5cxu9+1fH+mieMPCxdMFlCBSQ==}
 
   '@oxc-project/types@0.127.0':
     resolution: {integrity: sha512-aIYXQBo4lCbO4z0R3FHeucQHpF46l2LbMdxRvqvuRuW2OxdnSkcng5B8+K12spgLDj93rtN3+J2Vac/TIO+ciQ==}
@@ -1040,6 +1049,9 @@ packages:
 
   package-manager-detector@0.2.11:
     resolution: {integrity: sha512-BEnLolu+yuz22S56CU1SUKq3XC3PkwD5wv4ikR4MfGvnRVcmzXR9DwSlW2fEamyTPyXHomBJRzgapeuBvRNzJQ==}
+
+  pako@2.1.0:
+    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
 
   path-exists@4.0.0:
     resolution: {integrity: sha512-ak9Qy5Q7jYb2Wwcey5Fpvg2KoAc/ZIhLSLOSBmRmygPsGwkVVt0fZa0qrtMz+m6tJTAHfZQ8FnmB4MG4LWy7/w==}
@@ -1777,14 +1789,22 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
 
-  '@owf/cose@0.3.0-alpha-20260521082539':
+  '@owf/cose@0.3.0-alpha-20260521133622':
     dependencies:
-      '@owf/identity-common': 0.3.0-alpha-20260521082539
+      '@owf/identity-common': 0.3.0-alpha-20260521133622
       cbor-x: 1.6.4
       zod: 4.4.3
       zod-validation-error: 5.0.0(zod@4.4.3)
 
-  '@owf/identity-common@0.3.0-alpha-20260521082539': {}
+  '@owf/identity-common@0.3.0-alpha-20260521133622': {}
+
+  '@owf/token-status-list@0.3.0-alpha-20260521133622':
+    dependencies:
+      '@owf/cose': 0.3.0-alpha-20260521133622
+      '@owf/identity-common': 0.3.0-alpha-20260521133622
+      cbor-x: 1.6.4
+      pako: 2.1.0
+      zod: 4.4.3
 
   '@oxc-project/types@0.127.0': {}
 
@@ -2355,6 +2375,8 @@ snapshots:
   package-manager-detector@0.2.11:
     dependencies:
       quansync: 0.2.11
+
+  pako@2.1.0: {}
 
   path-exists@4.0.0: {}
 

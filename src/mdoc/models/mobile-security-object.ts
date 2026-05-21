@@ -1,7 +1,6 @@
 import type { DigestAlgorithm } from '@owf/cose'
-import { CborStructure } from '@owf/cose'
+import { CborStructure, TypedMap, typedMap } from '@owf/cose'
 import { z } from 'zod'
-import { TypedMap, typedMap } from '../../utils'
 import { DeviceKeyInfo, type DeviceKeyInfoEncodedStructure } from './device-key-info'
 import type { DocType } from './doctype'
 import { Status, type StatusEncodedStructure } from './status'

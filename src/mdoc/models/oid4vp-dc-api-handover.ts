@@ -1,6 +1,6 @@
+import { zUint8Array } from '@owf/cose'
 import z from 'zod'
 import type { MdocContext } from '../../context'
-import { zUint8Array } from '../../utils/zod'
 import { Handover } from './handover'
 import type { Oid4vpDcApiDraft24HandoverInfo } from './oid4vp-dc-api-draft24-handover-info'
 import type { Oid4vpDcApiHandoverInfo } from './oid4vp-dc-api-handover-info'

@@ -1,6 +1,7 @@
+import { hex } from '@owf/identity-common'
 import { X509Certificate } from '@peculiar/x509'
 import { expect, suite, test } from 'vitest'
-import { CoseKey, DeviceKey, hex, Issuer, SignatureAlgorithm } from '../../src'
+import { CoseKey, DeviceKey, Issuer, SignatureAlgorithm } from '../../src'
 import { DEVICE_JWK_PUBLIC, ISSUER_CERTIFICATE, ISSUER_PRIVATE_KEY_JWK } from '../config'
 import { deterministicMdocContext } from '../context'
 

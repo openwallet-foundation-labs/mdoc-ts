@@ -3,11 +3,13 @@ import {
   type CoseKey,
   ProtectedHeaders,
   RegisteredCwtHeaderClaimKey,
+  TypedMap,
+  typedMap,
   UnprotectedHeaders,
 } from '@owf/cose'
+import { base64url } from '@owf/identity-common'
 import { z } from 'zod'
 import type { MdocContext } from '../../context'
-import { base64url, TypedMap, typedMap } from '../../utils'
 import { findIssuerSigned } from '../../utils/findIssuerSigned'
 import { limitDisclosureToDeviceRequestNameSpaces } from '../../utils/limitDisclosure'
 import { verifyDocRequestsWithIssuerSigned } from '../../utils/verifyDocRequestsWithIssuerSigned'
