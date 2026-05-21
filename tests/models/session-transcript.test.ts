@@ -1,9 +1,9 @@
+import { hex } from '@owf/identity-common'
 import { describe, expect, test } from 'vitest'
 import { DeviceEngagement } from '../../src/mdoc/models/device-engagement'
 import { EReaderKey } from '../../src/mdoc/models/e-reader-key'
 import { NfcHandover } from '../../src/mdoc/models/nfc-handover'
 import { SessionTranscript } from '../../src/mdoc/models/session-transcript'
-import { hex } from '../../src/utils'
 import { mdocContext } from '../context'
 
 const cbor =

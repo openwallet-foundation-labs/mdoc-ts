@@ -1,6 +1,5 @@
-import { CborStructure, DataItem } from '@owf/cose'
+import { CborStructure, DataItem, TypedMap, typedMap } from '@owf/cose'
 import { z } from 'zod'
-import { TypedMap, typedMap } from '../../utils'
 import { DeviceAuth, type DeviceAuthEncodedStructure } from './device-auth'
 import { DeviceNamespaces, type DeviceNamespacesEncodedStructure } from './device-namespaces'
 

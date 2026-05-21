@@ -1,6 +1,5 @@
-import { CborStructure } from '@owf/cose'
+import { CborStructure, typedMap } from '@owf/cose'
 import { z } from 'zod'
-import { typedMap } from '../../utils'
 
 // Zod schema for ValidityInfo validation
 // The CBOR date extension (tag 0) handles Date <-> ISO string conversion automatically

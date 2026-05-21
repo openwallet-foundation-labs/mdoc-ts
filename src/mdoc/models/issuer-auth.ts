@@ -5,10 +5,10 @@ import {
   Sign1,
   type Sign1EncodedStructure,
   type Sign1Options,
+  zUint8Array,
 } from '@owf/cose'
 import z from 'zod'
 import type { MdocContext } from '../../context.js'
-import { zUint8Array } from '../../utils/zod.js'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback.js'
 import { MobileSecurityObject, type MobileSecurityObjectEncodedStructure } from './mobile-security-object.js'
 

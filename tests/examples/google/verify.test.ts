@@ -1,5 +1,6 @@
+import { hex } from '@owf/identity-common'
 import { describe, expect, test } from 'vitest'
-import { DeviceResponse, hex, SessionTranscript } from '../../../src'
+import { DeviceResponse, SessionTranscript } from '../../../src'
 import { mdocContext } from '../../context'
 import { deviceResponse } from './deviceResponse'
 import { rootCertificate } from './rootCertificate'

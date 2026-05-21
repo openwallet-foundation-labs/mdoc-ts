@@ -1,4 +1,5 @@
 import type { CoseKey } from '@owf/cose'
+import { base64url } from '@owf/identity-common'
 import type { MdocContext } from './context'
 import {
   type DeviceNamespaces,
@@ -8,7 +9,6 @@ import {
   SessionTranscript,
   type VerificationCallback,
 } from './mdoc'
-import { base64url } from './utils'
 
 export class Holder {
   /**

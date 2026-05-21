@@ -1,6 +1,5 @@
-import { CborStructure } from '@owf/cose'
+import { CborStructure, TypedMap, typedMap } from '@owf/cose'
 import { z } from 'zod'
-import { TypedMap, typedMap } from '../../utils'
 import { DeviceKey, type DeviceKeyEncodedStructure } from './device-key'
 import { KeyAuthorizations, type KeyAuthorizationsEncodedStructure } from './key-authorizations'
 import { KeyInfo, type KeyInfoEncodedStructure } from './key-info'

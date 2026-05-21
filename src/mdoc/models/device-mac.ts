@@ -1,7 +1,7 @@
 import type { CoseKey, Mac0Options } from '@owf/cose'
 import { Mac0, type Mac0DecodedStructure, type Mac0EncodedStructure } from '@owf/cose'
+import { stringToBytes } from '@owf/identity-common'
 import type { MdocContext } from '../../context'
-import { stringToBytes } from '../../utils'
 import { SessionTranscript } from './session-transcript'
 
 export type DeviceMacEncodedStructure = Mac0EncodedStructure

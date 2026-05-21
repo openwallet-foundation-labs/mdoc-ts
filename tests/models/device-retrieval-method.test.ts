@@ -1,3 +1,4 @@
+import { hex } from '@owf/identity-common'
 import { describe, expect, test } from 'vitest'
 import { BleOptions, cborDecode } from '../../src'
 import {
@@ -5,7 +6,6 @@ import {
   type DeviceRetrievalMethodEncodedStructure,
   DeviceRetrievalMethodType,
 } from '../../src/mdoc/models/device-retrieval-method'
-import { hex } from '../../src/utils'
 
 const cbor = '830201b900036130f46131f56231315045efef742b2c4837a9a3b0e1d05a6917'
 

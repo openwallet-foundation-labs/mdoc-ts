@@ -1,9 +1,9 @@
+import { hex } from '@owf/identity-common'
 import { describe, expect, test } from 'vitest'
 import z from 'zod'
 import { DeviceRequest, Holder, SessionTranscript } from '../../src'
 import type { VerificationAssessment } from '../../src/mdoc/check-callback'
 import { Handover } from '../../src/mdoc/models/handover'
-import { hex } from '../../src/utils'
 import { mdocContext } from '../context'
 
 // Static fixture from tests/models/device-request.test.ts — a DeviceRequest with

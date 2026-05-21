@@ -1,5 +1,5 @@
+import { zUint8Array } from '@owf/cose'
 import z from 'zod'
-import { zUint8Array } from '../../utils/zod'
 import { Handover } from './handover'
 
 const nfcHandoverEncodedSchema = z.tuple([zUint8Array, zUint8Array.nullable()])

@@ -1,7 +1,5 @@
-import { CborStructure } from '@owf/cose'
+import { CborStructure, typedMap, zUint8Array } from '@owf/cose'
 import { z } from 'zod'
-import { typedMap } from '../../utils'
-import { zUint8Array } from '../../utils/zod'
 
 enum WifiOptionsKeys {
   Passphrase = 0,
