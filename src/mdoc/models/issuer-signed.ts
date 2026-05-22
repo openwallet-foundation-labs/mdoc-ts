@@ -81,9 +81,10 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
       now?: Date
       trustedCertificates?: Array<Uint8Array>
       disableCertificateChainValidation?: boolean
+      disableStatusValidation?: boolean
       skewSeconds?: number
     },
-    ctx: Pick<MdocContext, 'x509' | 'crypto' | 'cose'>
+    ctx: Pick<MdocContext, 'x509' | 'crypto' | 'cose' | 'fetch'>
   ) {
     const { valueDigests, digestAlgorithm } = this.issuerAuth.mobileSecurityObject
 

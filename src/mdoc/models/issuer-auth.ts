@@ -7,6 +7,7 @@ import {
   type Sign1Options,
   zUint8Array,
 } from '@owf/cose'
+import { fetchStatusList, StatusListCwt, verifyStatus } from '@owf/token-status-list'
 import z from 'zod'
 import type { MdocContext } from '../../context.js'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback.js'
@@ -50,19 +51,46 @@ export class IssuerAuth extends Sign1 {
     return mso
   }
 
+  /**
+   * @todo use the certificate provided in the status
+   * @todo handle the identifierList
+   */
+  public async verifyStatus(
+    { now = new Date(), checkFreshness }: { now?: Date; checkFreshness?: boolean },
+    ctx: Pick<MdocContext, 'fetch'>
+  ) {
+    if (!this.mobileSecurityObject.status) return undefined
+    if (!this.mobileSecurityObject.status.statusList) return undefined
+    if (this.mobileSecurityObject.status.identifierList) {
+      throw new Error('Unable to verify status. Identifier List is not yet implemented')
+    }
+
+    const { uri, idx } = this.mobileSecurityObject.status.statusList
+    const statusListToken = await fetchStatusList({ uri, customFetcher: ctx.fetch })
+    if (typeof statusListToken === 'string') {
+      verifyStatus({ uri, idx, now, token: statusListToken, checkFreshness })
+      return true
+    }
+    const cwt = StatusListCwt.fromToken(statusListToken)
+    cwt.verifyStatus({ uri, idx, now, checkFreshness })
+    return true
+  }
+
   public async verify(
     options: {
       verificationCallback?: VerificationCallback
       now?: Date
       trustedCertificates?: Array<Uint8Array>
       disableCertificateChainValidation?: boolean
+      disableStatusValidation?: boolean
       skewSeconds?: number
     },
-    ctx: Pick<MdocContext, 'x509' | 'cose'>
+    ctx: Pick<MdocContext, 'x509' | 'cose' | 'fetch'>
   ) {
     const verificationCallback = options.verificationCallback ?? defaultVerificationCallback
     const now = options.now ?? new Date()
     const disableCertificateChainValidation = options.disableCertificateChainValidation ?? false
+    const disableRevocationCheck = options.disableStatusValidation ?? false
     const trustedCertificates = options.trustedCertificates ?? []
     const skewSeconds = options.skewSeconds ?? 30
 
@@ -93,6 +121,18 @@ export class IssuerAuth extends Sign1 {
         onCheck({
           status: 'FAILED',
           check: 'Issuer certificate must be valid',
+          reason: err instanceof Error ? err.message : 'Unknown error',
+        })
+      }
+    }
+
+    if (!disableRevocationCheck) {
+      try {
+        await this.verifyStatus({ now, checkFreshness: true }, ctx)
+      } catch (err) {
+        onCheck({
+          status: 'FAILED',
+          check: 'Revocation information must be valid',
           reason: err instanceof Error ? err.message : 'Unknown error',
         })
       }

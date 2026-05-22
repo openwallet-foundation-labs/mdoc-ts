@@ -10,6 +10,7 @@ import { exportJWK, importX509 } from 'jose'
 import { CoseKey, type MdocContext } from '../src'
 
 export const mdocContext: MdocContext = {
+  fetch,
   crypto: {
     digest: async ({ digestAlgorithm, bytes }) => {
       // Need to cast as Uint8Array<ArrayBuffer> since newer TypeScript versions made Uint8Array generic
