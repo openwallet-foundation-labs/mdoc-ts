@@ -1,7 +1,11 @@
 import { CborStructure, TypedMap, typedMap } from '@owf/cose'
-import { StatusListInfo, type StatusListInfoEncodedStructure } from '@owf/token-status-list'
+import { StatusListInfo, type StatusListInfoEncodedStructure, type StatusListInfoOptions } from '@owf/token-status-list'
 import { z } from 'zod'
-import { IdentifierListInfo, type IdentifierListInfoEncodedStructure } from './identifier-list-info'
+import {
+  IdentifierListInfo,
+  type IdentifierListInfoEncodedStructure,
+  type IdentifierListInfoOptions,
+} from './identifier-list-info'
 
 /**
  * Status references one or both of the revocation mechanisms defined in
@@ -29,8 +33,8 @@ export type StatusDecodedStructure = z.output<typeof statusSchema>
 export type StatusEncodedStructure = z.input<typeof statusSchema>
 
 export type StatusOptions = {
-  statusList?: StatusListInfo
-  identifierList?: IdentifierListInfo
+  statusList?: StatusListInfo | StatusListInfoOptions
+  identifierList?: IdentifierListInfo | IdentifierListInfoOptions
 }
 
 export class Status extends CborStructure<StatusEncodedStructure, StatusDecodedStructure> {
@@ -79,10 +83,18 @@ export class Status extends CborStructure<StatusEncodedStructure, StatusDecodedS
   public static create(options: StatusOptions): Status {
     const map: StatusDecodedStructure = new TypedMap()
     if (options.statusList) {
-      map.set('status_list', options.statusList)
+      map.set(
+        'status_list',
+        options.statusList instanceof StatusListInfo ? options.statusList : StatusListInfo.create(options.statusList)
+      )
     }
     if (options.identifierList) {
-      map.set('identifier_list', options.identifierList)
+      map.set(
+        'identifier_list',
+        options.identifierList instanceof IdentifierListInfo
+          ? options.identifierList
+          : IdentifierListInfo.create(options.identifierList)
+      )
     }
     return this.fromDecodedStructure(map)
   }

@@ -11,12 +11,13 @@ export class Verifier {
       sessionTranscript: SessionTranscript | Uint8Array
       ephemeralReaderKey?: CoseKey
       disableCertificateChainValidation?: boolean
+      disableStatusValidation?: boolean
       trustedCertificates: Uint8Array[]
       now?: Date
       onCheck?: VerificationCallback
       skewSeconds?: number
     },
-    ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto'>
+    ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>
   ) {
     const deviceResponse =
       options.deviceResponse instanceof DeviceResponse

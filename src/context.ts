@@ -3,6 +3,7 @@ import type { CoseKey, DigestAlgorithm, Mac0, Mac0Context, Sign1Context } from '
 type MaybePromise<T> = Promise<T> | T
 
 export interface MdocContext {
+  fetch: typeof fetch
   crypto: {
     random: (length: number) => Uint8Array
     digest: (input: { digestAlgorithm: DigestAlgorithm; bytes: Uint8Array }) => MaybePromise<Uint8Array>

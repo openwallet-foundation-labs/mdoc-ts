@@ -22,10 +22,11 @@ export class Holder {
       verificationCallback?: VerificationCallback
       now?: Date
       disableCertificateChainValidation?: boolean
+      disableStatusValidation?: boolean
       trustedCertificates?: Array<Uint8Array>
       skewSeconds?: number
     },
-    ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto'>
+    ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>
   ) {
     const issuerSigned =
       typeof options.issuerSigned === 'string'
