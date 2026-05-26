@@ -307,7 +307,7 @@ suite('Verification', () => {
     )
 
     nock('https://example.org')
-      .matchHeader('Accept', /application\/statuslist\+(cwt|jwt), application\/statuslist\+(cwt|jwt)/)
+      .matchHeader('Accept', /application\/statuslist\+(cwt|jwt),application\/statuslist\+(cwt|jwt)/)
       .persist()
       .get('/status-list/10')
       .reply(200, Buffer.from(encodedCwt), { 'Content-Type': MediaTypes.StatusListCwt })
@@ -409,7 +409,7 @@ suite('Verification', () => {
     )
 
     nock('https://example.org')
-      .matchHeader('Accept', /application\/statuslist\+(cwt|jwt), application\/statuslist\+(cwt|jwt)/)
+      .matchHeader('Accept', /application\/statuslist\+(cwt|jwt),application\/statuslist\+(cwt|jwt)/)
       .persist()
       .get('/status-list/20')
       .reply(200, Buffer.from(encodedCwt), { 'Content-Type': MediaTypes.StatusListCwt })
