@@ -27,14 +27,13 @@
     "changeset-version": "pnpm changeset version && pnpm style:fix"
   },
   "dependencies": {
-    "@owf/cose": "0.3.0-alpha-20260527090717",
-    "@owf/identity-common": "0.3.0-alpha-20260527090717",
-    "@owf/token-status-list": "0.3.0-alpha-20260527090717",
-    "nock": "^14.0.15",
-    "zod": "^4.4.3",
-    "zod-validation-error": "^5.0.0"
+    "@owf/cose": "0.3.0-alpha-20260527112128",
+    "@owf/identity-common": "0.3.0-alpha-20260527112128",
+    "@owf/token-status-list": "0.3.0-alpha-20260527112128",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "nock": "^14.0.15",
     "@biomejs/biome": "2.4.9",
     "@changesets/cli": "^2.30.0",
     "@noble/curves": "^2.0.1",

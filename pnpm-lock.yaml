@@ -9,17 +9,14 @@ importers:
   .:
     dependencies:
       '@owf/cose':
-        specifier: 0.3.0-alpha-20260527090717
-        version: 0.3.0-alpha-20260527090717
+        specifier: 0.3.0-alpha-20260527112128
+        version: 0.3.0-alpha-20260527112128
       '@owf/identity-common':
-        specifier: 0.3.0-alpha-20260527090717
-        version: 0.3.0-alpha-20260527090717
+        specifier: 0.3.0-alpha-20260527112128
+        version: 0.3.0-alpha-20260527112128
       '@owf/token-status-list':
-        specifier: 0.3.0-alpha-20260527090717
-        version: 0.3.0-alpha-20260527090717
-      nock:
-        specifier: ^14.0.15
-        version: 14.0.15
+        specifier: 0.3.0-alpha-20260527112128
+        version: 0.3.0-alpha-20260527112128
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -51,6 +48,9 @@ importers:
       jose:
         specifier: ^6.2.2
         version: 6.2.3
+      nock:
+        specifier: ^14.0.15
+        version: 14.0.15
       tsdown:
         specifier: ^0.21.5
         version: 0.21.10(typescript@5.9.3)
@@ -458,14 +458,14 @@ packages:
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
 
-  '@owf/cose@0.3.0-alpha-20260527090717':
-    resolution: {integrity: sha512-5f3CoxGvk7Yw9k5Au4j/l2ATOQviJ4xIeWnUCedGVKfZVoEXC+0zamVnpZhWB5LMwHnSlAqJfaHdMjH6XU5FtA==}
+  '@owf/cose@0.3.0-alpha-20260527112128':
+    resolution: {integrity: sha512-ufBELD4MByPW30YG4Z6CjUUEpaHoGAW7vYaTi7oMtj1ZsYhDGQlYKFuFTAOHY9riiThLuMvrFsZK5ftMKKnPCw==}
 
-  '@owf/identity-common@0.3.0-alpha-20260527090717':
-    resolution: {integrity: sha512-R0Owiq/XS0a/kTsskXCwZTRyeC+wXS0cnSIaZ6tv5CZVY+L434bEBP5AHD4x+OIXrk4K7SKCrwMDoTVArsr8Rg==}
+  '@owf/identity-common@0.3.0-alpha-20260527112128':
+    resolution: {integrity: sha512-cMsZAVZrCp5TaKUkkohwC/hCrXHeooE75rifQhPYWBfZDYQ/A/m20JVzrMo1yIqoibkvytNd0uaVdkTpJxKJrQ==}
 
-  '@owf/token-status-list@0.3.0-alpha-20260527090717':
-    resolution: {integrity: sha512-hjUvMoHJ1MyfkGJlUC/CRX4wE0Dkhvvv4SBhi4wNegEZZcHctOfM0DyRJLKvbpZWZ/+UjiY2rURAtHJIjD5b3w==}
+  '@owf/token-status-list@0.3.0-alpha-20260527112128':
+    resolution: {integrity: sha512-Po4uXIZps5kZNxJQYl5g9kWwCiLwaA/YwJPTsd00fue8UGGPOtm4OtKAmVhPGeCe1bIsmV/oLX8dt4PDdbn04w==}
 
   '@oxc-project/types@0.127.0':
     resolution: {integrity: sha512-aIYXQBo4lCbO4z0R3FHeucQHpF46l2LbMdxRvqvuRuW2OxdnSkcng5B8+K12spgLDj93rtN3+J2Vac/TIO+ciQ==}
@@ -1858,19 +1858,19 @@ snapshots:
 
   '@open-draft/until@2.1.0': {}
 
-  '@owf/cose@0.3.0-alpha-20260527090717':
+  '@owf/cose@0.3.0-alpha-20260527112128':
     dependencies:
-      '@owf/identity-common': 0.3.0-alpha-20260527090717
+      '@owf/identity-common': 0.3.0-alpha-20260527112128
       cbor-x: 1.6.4
       zod: 4.4.3
       zod-validation-error: 5.0.0(zod@4.4.3)
 
-  '@owf/identity-common@0.3.0-alpha-20260527090717': {}
+  '@owf/identity-common@0.3.0-alpha-20260527112128': {}
 
-  '@owf/token-status-list@0.3.0-alpha-20260527090717':
+  '@owf/token-status-list@0.3.0-alpha-20260527112128':
     dependencies:
-      '@owf/cose': 0.3.0-alpha-20260527090717
-      '@owf/identity-common': 0.3.0-alpha-20260527090717
+      '@owf/cose': 0.3.0-alpha-20260527112128
+      '@owf/identity-common': 0.3.0-alpha-20260527112128
       cbor-x: 1.6.4
       pako: 2.1.0
       zod: 4.4.3

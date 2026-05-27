@@ -71,7 +71,7 @@ export const mdocContext: MdocContext = {
         extractable: true,
       })
 
-      return CoseKey.fromJwk((await exportJWK(key)) as unknown as Record<string, unknown>).publicKey
+      return CoseKey.fromJwk((await exportJWK(key)) as unknown as Record<string, unknown>)
     },
 
     verifyCertificateChain: async (input: {
