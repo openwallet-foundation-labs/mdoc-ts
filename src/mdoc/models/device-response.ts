@@ -276,7 +276,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
             ctx
           )
 
-          await deviceMac.authenticate({ key: macKey }, { mac: ctx.cose.mac0.sign })
+          await deviceMac.authenticate({ key: macKey }, ctx.cose.mac0)
 
           deviceAuthOptions.deviceMac = deviceMac
         }

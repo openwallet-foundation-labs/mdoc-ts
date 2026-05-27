@@ -1,4 +1,4 @@
-import type { CoseKey, DigestAlgorithm, Mac0, Mac0Context, Sign1Context } from '@owf/cose'
+import type { DigestAlgorithm, Mac0Context, Sign1Context } from '@owf/cose'
 
 type MaybePromise<T> = Promise<T> | T
 
@@ -22,10 +22,7 @@ export interface MdocContext {
       verify: Sign1Context['verify']
     }
 
-    mac0: {
-      sign: Mac0Context['mac']
-      verify(input: { mac0: Mac0; key: CoseKey | Uint8Array }): MaybePromise<boolean>
-    }
+    mac0: Mac0Context
   }
 
   x509: {

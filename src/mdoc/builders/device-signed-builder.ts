@@ -134,7 +134,7 @@ export class DeviceSignedBuilder {
       {
         key: derivedKey,
       },
-      { mac: this.ctx.cose.mac0.sign }
+      this.ctx.cose.mac0
     )
 
     return DeviceSigned.create({

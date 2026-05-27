@@ -30,7 +30,7 @@ export const mdocContext: MdocContext = {
 
   cose: {
     mac0: {
-      sign: async (input) => {
+      authenticate: async (input) => {
         const { key, toBeAuthenticated } = input
         const keyBytes = key instanceof CoseKey ? key.privateKey : key
         return hmac(sha256, keyBytes, toBeAuthenticated)
