@@ -72,12 +72,13 @@ export class DeviceSignedBuilder {
     const deviceSignature = DeviceSignature.create({
       unprotectedHeaders,
       protectedHeaders,
-      detachedPayload: deviceAuthentication.encode({ asDataItem: true }),
+      payload: null,
     })
 
     await deviceSignature.sign(
       {
         signingKey: options.signingKey,
+        detachedPayload: deviceAuthentication.encode({ asDataItem: true }),
       },
       { sign: this.ctx.cose.sign1.sign }
     )
@@ -118,7 +119,7 @@ export class DeviceSignedBuilder {
     const deviceMac = DeviceMac.create({
       unprotectedHeaders,
       protectedHeaders,
-      detachedPayload: deviceAuthentication.encode({ asDataItem: true }),
+      payload: null,
     })
 
     const salt = await this.ctx.crypto.digest({ digestAlgorithm: 'SHA-256', bytes: options.sessionTranscript.encode() })
@@ -133,6 +134,7 @@ export class DeviceSignedBuilder {
     const deviceMacWithTag = await deviceMac.authenticate(
       {
         key: derivedKey,
+        detachedPayload: deviceAuthentication.encode({ asDataItem: true }),
       },
       this.ctx.cose.mac0
     )

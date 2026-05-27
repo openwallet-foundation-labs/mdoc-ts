@@ -36,11 +36,8 @@ export const mdocContext: MdocContext = {
         return hmac(sha256, keyBytes, toBeAuthenticated)
       },
       verify: async (input) => {
-        const { mac0, key } = input
-        return timingSafeEqual(
-          mac0.tag,
-          hmac(sha256, key instanceof CoseKey ? key.privateKey : key, mac0.toBeAuthenticated)
-        )
+        const { tag, toBeAuthenticated, key } = input
+        return timingSafeEqual(tag, hmac(sha256, key instanceof CoseKey ? key.privateKey : key, toBeAuthenticated))
       },
     },
     sign1: {
@@ -49,10 +46,10 @@ export const mdocContext: MdocContext = {
         return p256.sign(toBeSigned, key.privateKey, { format: 'compact' })
       },
       verify: async (input) => {
-        const { sign1, key } = input
+        const { signature, key, toBeVerified } = input
 
         // lowS is needed after upgrade of @noble/curves to keep existing tests passing
-        return p256.verify(sign1.signature, sign1.toBeSigned, key instanceof CoseKey ? key.publicKey : key, {
+        return p256.verify(signature, toBeVerified, key instanceof CoseKey ? key.publicKey : key, {
           lowS: false,
         })
       },

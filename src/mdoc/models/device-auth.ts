@@ -98,8 +98,11 @@ export class DeviceAuth extends CborStructure<DeviceAuthEncodedStructure, Device
 
     if (deviceSignature) {
       try {
-        deviceSignature.detachedPayload = deviceAuthenticationBytes
-        const verificationResult = await ctx.cose.sign1.verify({ sign1: deviceSignature, key: deviceKey })
+        const verificationResult = await ctx.cose.sign1.verify({
+          toBeVerified: deviceSignature.toBeSigned({ detachedPayload: deviceAuthenticationBytes }),
+          key: deviceKey,
+          signature: deviceSignature.signature,
+        })
 
         onCheck({
           status: verificationResult ? 'PASSED' : 'FAILED',
@@ -134,13 +137,13 @@ export class DeviceAuth extends CborStructure<DeviceAuthEncodedStructure, Device
       }
 
       try {
-        deviceMac.detachedPayload = deviceAuthenticationBytes
         const isValid = await deviceMac.verify(
           {
             publicKey: deviceKey,
             privateKey: options.ephemeralMacPrivateKey,
             sessionTranscript: options.sessionTranscript,
             info: 'EMacKey',
+            detachedPayload: deviceAuthenticationBytes,
           },
           ctx
         )

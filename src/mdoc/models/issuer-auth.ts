@@ -25,7 +25,7 @@ export class IssuerAuth extends Sign1 {
       payload:
         options.payload instanceof MobileSecurityObject
           ? options.payload.encode({ asDataItem: true })
-          : options.payload,
+          : (options.payload ?? null),
     }) as IssuerAuth
   }
 

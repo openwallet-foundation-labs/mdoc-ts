@@ -32,9 +32,12 @@ export class ReaderAuth extends Sign1 {
 
     const onCheck = onCategoryCheck(verificationCallback, 'READER_AUTH')
 
-    this.detachedPayload = readerAuthentication.encode({ asDataItem: true })
-
-    const isValid = await this.verifySignature({}, { verify: ctx.cose.sign1.verify, x509: ctx.x509 })
+    const isValid = await this.verifySignature(
+      {
+        detachedPayload: readerAuthentication.encode({ asDataItem: true }),
+      },
+      { verify: ctx.cose.sign1.verify, x509: ctx.x509 }
+    )
 
     onCheck({
       status: isValid ? 'PASSED' : 'FAILED',

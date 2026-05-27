@@ -14,6 +14,6 @@ describe('reader auth', () => {
     expect(readerAuth.unprotectedHeaders.headers?.has(RegisteredCwtHeaderClaimKey.X5Chain)).toBeTruthy()
     expect(readerAuth.protectedHeaders.headers?.has(RegisteredCwtHeaderClaimKey.Algorithm)).toBeTruthy()
 
-    expect(() => readerAuth.toBeSigned).toThrow()
+    expect(() => readerAuth.toBeSigned()).toThrow()
   })
 })
