@@ -1,5 +1,14 @@
 # @owf/mdoc
 
+## 0.7.0
+
+### Minor Changes
+
+- 97425f2: Updated MdocContext.mac.sign to MdocContext.mac.authenticate
+- 21abd59: refactor: only allow CoseKey for sign1.verify callback
+- 982e9c7: fix: correctly handle detached payload vs payload on sign1 and mac0. The detached payload is not available on the Sign1 and Mac0 classes anymore, and should be provided to the method classes directly. Detached payload cannot be provided anymore when embedded payload is already present. The `mac0` and `sign1` structures are not passed anymore to the context, but the already encoded data is provided.
+- 21abd59: only allow CoseKey as return value for getPublicKey
+
 ## 0.6.0
 
 ### Minor Changes
