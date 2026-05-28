@@ -253,8 +253,8 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
           const deviceSignature = await DeviceSignature.create({
             unprotectedHeaders,
             protectedHeaders,
-            detachedPayload: deviceAuthenticationBytes,
-          }).sign({ signingKey }, { sign: ctx.cose.sign1.sign })
+            payload: null,
+          }).sign({ signingKey, detachedPayload: deviceAuthenticationBytes }, { sign: ctx.cose.sign1.sign })
 
           deviceAuthOptions.deviceSignature = deviceSignature
         } else {
@@ -264,7 +264,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
           const deviceMac = DeviceMac.create({
             protectedHeaders,
             unprotectedHeaders,
-            detachedPayload: deviceAuthenticationBytes,
+            payload: null,
           })
 
           const macKey = await deviceMac.createDeviceMacKey(
@@ -276,7 +276,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
             ctx
           )
 
-          await deviceMac.authenticate({ key: macKey }, ctx.cose.mac0)
+          await deviceMac.authenticate({ key: macKey, detachedPayload: deviceAuthenticationBytes }, ctx.cose.mac0)
 
           deviceAuthOptions.deviceMac = deviceMac
         }

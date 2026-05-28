@@ -15,14 +15,18 @@ export class DeviceMac extends Mac0 {
       privateKey: CoseKey
       info?: 'EMacKey' | 'SKReader' | 'SKDevice'
       sessionTranscript: SessionTranscript | Uint8Array
+      detachedPayload?: Uint8Array
     },
     ctx: Pick<MdocContext, 'crypto' | 'cose'>
   ) {
     const key = await this.createDeviceMacKey(options, ctx)
 
     return ctx.cose.mac0.verify({
-      mac0: this,
+      toBeAuthenticated: this.toBeAuthenticated({
+        detachedPayload: options.detachedPayload,
+      }),
       key,
+      tag: this.tag,
     })
   }
 
