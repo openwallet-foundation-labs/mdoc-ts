@@ -2,6 +2,7 @@ import crypto, { timingSafeEqual } from 'node:crypto'
 import { p256 } from '@noble/curves/nist.js'
 import { hmac } from '@noble/hashes/hmac.js'
 import { sha256 } from '@noble/hashes/sha2.js'
+import { coseKeyToJwkClaim } from '@owf/cose'
 import { hex } from '@owf/identity-common'
 import { hkdf } from '@panva/hkdf'
 import * as x509 from '@peculiar/x509'
@@ -64,7 +65,7 @@ export const mdocContext: MdocContext = {
     getPublicKey: async (input) => {
       const certificate = new X509Certificate(input.certificate)
 
-      const key = await importX509(certificate.toString(), input.alg, {
+      const key = await importX509(certificate.toString(), coseKeyToJwkClaim.algorithm(input.algorithm), {
         extractable: true,
       })
 

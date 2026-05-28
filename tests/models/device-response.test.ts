@@ -15,10 +15,8 @@ describe('device response', () => {
     expect(deviceResponse.documents?.length).toStrictEqual(1)
 
     expect(deviceResponse.documents?.[0].docType).toStrictEqual('org.iso.18013.5.1.mDL')
-    expect(deviceResponse.documents?.[0].issuerSigned.issuerAuth.signatureAlgorithmName).toStrictEqual('ES256')
+    expect(deviceResponse.documents?.[0].issuerSigned.issuerAuth.jwaAlgorithm).toStrictEqual('ES256')
 
-    expect(deviceResponse.documents?.[0].deviceSigned.deviceAuth.deviceMac?.signatureAlgorithmName).toStrictEqual(
-      'HS256'
-    )
+    expect(deviceResponse.documents?.[0].deviceSigned.deviceAuth.deviceMac?.jwaAlgorithm).toStrictEqual('HS256')
   })
 })

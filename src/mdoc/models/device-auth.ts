@@ -119,7 +119,7 @@ export class DeviceAuth extends CborStructure<DeviceAuthEncodedStructure, Device
     }
 
     if (deviceMac) {
-      if (deviceMac.signatureAlgorithmName !== MacAlgorithm.HS256) {
+      if (deviceMac.algorithm !== MacAlgorithm.HS256) {
         onCheck({
           status: 'FAILED',
           check: 'Device MAC must use alg 5 (HMAC 256/256)',
