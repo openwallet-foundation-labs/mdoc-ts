@@ -42,7 +42,7 @@
     "@peculiar/x509": "^1.14.3",
     "@types/node": "^25.5.0",
     "jose": "^6.2.2",
-    "tsdown": "^0.21.5",
+    "tsdown": "^0.22.1",
     "typescript": "~5.9.3",
     "vitest": "^4.1.1"
   },
