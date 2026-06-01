@@ -18,3 +18,4 @@ export class NoPublicKeySetOnStatusListError extends MdlError {}
 export class InvalidAlgorithmError extends MdlError {}
 export class InvalidMessageAuthenticationCode extends MdlError {}
 export class InvalidSignatureError extends MdlError {}
+export class JwtNotSupportForStatusListError extends MdlError {}

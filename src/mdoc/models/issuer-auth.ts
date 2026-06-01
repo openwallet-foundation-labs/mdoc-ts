@@ -10,7 +10,7 @@ import {
   SignatureAlgorithm,
   zUint8Array,
 } from '@owf/cose'
-import { fetchStatusList, StatusListCwt, verifyStatus } from '@owf/token-status-list'
+import { fetchStatusList, StatusListCwt } from '@owf/token-status-list'
 import z from 'zod'
 import type { MdocContext } from '../../context.js'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback.js'
@@ -18,6 +18,7 @@ import {
   InvalidAlgorithmError,
   InvalidMessageAuthenticationCode,
   InvalidSignatureError,
+  JwtNotSupportForStatusListError,
   NoPublicKeySetOnStatusListError,
   UnableToExtractX5ChainFromCwtError,
 } from '../errors.js'
@@ -98,12 +99,14 @@ export class IssuerAuth extends Sign1 {
     }
 
     const { uri, idx } = this.mobileSecurityObject.status.statusList
-    const statusListToken = await fetchStatusList({ uri, customFetcher: ctx.fetch })
+    const statusListToken = await fetchStatusList({ uri, customFetcher: ctx.fetch, acceptedFormats: ['cwt'] })
+
     if (typeof statusListToken === 'string') {
-      // TODO: add signature check
-      verifyStatus({ uri, idx, now, token: statusListToken, checkFreshness })
-      return true
+      throw new JwtNotSupportForStatusListError(
+        'Could not verify status list token. @owf/mdoc currently does not support JWT format for status list, only CWT'
+      )
     }
+
     const cwt = StatusListCwt.fromToken(statusListToken)
 
     // TODO: we should add this utility section to the cwt/sign1/mac0 class
@@ -118,29 +121,42 @@ export class IssuerAuth extends Sign1 {
     }
 
     const algorithm = this.protectedHeaders.headers?.get(RegisteredCwtHeaderClaimKey.Algorithm) as SignatureAlgorithm
+    const x5chain =
+      x5c instanceof Uint8Array
+        ? [x5c]
+        : Array.isArray(x5c) && x5c.every((e) => e instanceof Uint8Array)
+          ? x5c
+          : undefined
 
-    const x5chain = x5c instanceof Uint8Array ? [x5c] : x5c
+    if (!x5chain) {
+      throw new UnableToExtractX5ChainFromCwtError()
+    }
+
     const [certificate] = x5chain
+
     if (trustedRevocationCertificates) {
       await ctx.x509.verifyCertificateChain({ trustedCertificates: trustedRevocationCertificates, x5chain })
     }
+
     const publicKey = await ctx.x509.getPublicKey({ certificate, algorithm })
     const alg = algorithm ?? publicKey.algorithm
+
     if (!publicKey) {
       throw new NoPublicKeySetOnStatusListError()
     }
+
     if (Object.values(SignatureAlgorithm).includes(alg as SignatureAlgorithm)) {
       if (!(await cwt.verifySignature({ key: publicKey }, ctx.cose.sign1))) {
-        throw new InvalidSignatureError()
+        throw new InvalidSignatureError('Incorrect signature for CWT statuslist')
       }
       // TODO: `publicKey.algorithm` should also be `MacAlgorithm`
     } else if (Object.values(MacAlgorithm).includes(alg as unknown as MacAlgorithm)) {
       if (!(await cwt.verifyAuthenticationCode({ key: publicKey }, ctx.cose.mac0))) {
-        throw new InvalidMessageAuthenticationCode()
+        throw new InvalidMessageAuthenticationCode('Incorrect message authentication code for CWT status list')
       }
     } else {
       throw new InvalidAlgorithmError(
-        `Invalid algorithm (claim ${RegisteredCwtHeaderClaimKey.Algorithm}) set. Value '${alg}'`
+        `Invalid algorithm (claim ${RegisteredCwtHeaderClaimKey.Algorithm}) set. Value '${alg}', therefore unable to verify the CWT token status list`
       )
     }
 

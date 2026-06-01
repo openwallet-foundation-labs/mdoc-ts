@@ -77,11 +77,11 @@ export const mdocContext: MdocContext = {
       x5chain: Array<Uint8Array>
       now?: Date
     }) => {
-      const { trustedCertificates, x5chain: mdocCertificateChain } = input
-      if (mdocCertificateChain.length === 0) throw new Error('Certificate chain is empty')
+      const { trustedCertificates, x5chain: certificateChain } = input
+      if (certificateChain.length === 0) throw new Error('Certificate chain is empty')
 
-      const parsedLeafCertificate = new x509.X509Certificate(mdocCertificateChain[0])
-      const parsedMdocCertificates = mdocCertificateChain.map((c) => new x509.X509Certificate(c))
+      const parsedLeafCertificate = new x509.X509Certificate(certificateChain[0])
+      const parsedMdocCertificates = certificateChain.map((c) => new x509.X509Certificate(c))
       const parsedTrustedCertificates = trustedCertificates.map((c) => new x509.X509Certificate(c))
 
       // Use both trusted and mdoc certificate to build chain
@@ -98,7 +98,7 @@ export const mdocContext: MdocContext = {
 
       // We allow longer parsed chain, in case the root cert was not part of the chain, but in the
       // list of trusted certificates
-      if (parsedChain.length < mdocCertificateChain.length) {
+      if (parsedChain.length < certificateChain.length) {
         throw new Error('Could not parse the full chain. Likely due to incorrect ordering')
       }
 

@@ -22,7 +22,13 @@ import {
   Verifier,
 } from '../../src'
 import { Handover } from '../../src/mdoc/models/handover'
-import { DEVICE_JWK_PRIVATE, DEVICE_JWK_PUBLIC, ISSUER_CERTIFICATE, ISSUER_PRIVATE_KEY_JWK } from '../config'
+import {
+  DEVICE_JWK_PRIVATE,
+  DEVICE_JWK_PUBLIC,
+  INVALID_CERTIFICATE,
+  ISSUER_CERTIFICATE,
+  ISSUER_PRIVATE_KEY_JWK,
+} from '../config'
 import { mdocContext } from '../context'
 
 const signed = new Date('2023-10-24T14:55:18Z')
@@ -317,7 +323,7 @@ suite('Verification', () => {
     )
 
     nock('https://example.org')
-      .matchHeader('Accept', /application\/statuslist\+(cwt|jwt),application\/statuslist\+(cwt|jwt)/)
+      .matchHeader('Accept', /application\/statuslist\+cwt/)
       .persist()
       .get('/status-list/10')
       .reply(200, Buffer.from(encodedCwt), { 'Content-Type': MediaTypes.StatusListCwt })
@@ -427,7 +433,7 @@ suite('Verification', () => {
     )
 
     nock('https://example.org')
-      .matchHeader('Accept', /application\/statuslist\+(cwt|jwt),application\/statuslist\+(cwt|jwt)/)
+      .matchHeader('Accept', /application\/statuslist\+cwt/)
       .persist()
       .get('/status-list/10')
       .reply(200, Buffer.from(encodedCwt), { 'Content-Type': MediaTypes.StatusListCwt })
@@ -519,6 +525,63 @@ suite('Verification', () => {
     )
   })
 
+  test('Verify mdoc with status status_list invalid status list format of JWT', async () => {
+    const idx = 3
+    const uri = 'https://example.org/status-list/30'
+    const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
+    const statusListCwt = new StatusListCwt({
+      payload: { statusList, subject: uri },
+      protectedHeaders: ProtectedHeaders.create({
+        protectedHeaders: new Map<number, unknown>([
+          [RegisteredCwtHeaderClaimKey.X5Chain, [new X509Certificate(ISSUER_CERTIFICATE).rawData]],
+          [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
+        ]),
+      }),
+    })
+    statusListCwt.updateStatusList(idx, StatusType.Valid)
+    nock('https://example.org')
+      .matchHeader('Accept', /application\/statuslist\+cwt/)
+      .persist()
+      .get('/status-list/30')
+      .reply(200, 'invalid-jwt', { 'Content-Type': MediaTypes.StatusListJwt })
+
+    const issuer = new Issuer('org.iso.18013.5.1', mdocContext)
+
+    issuer.addIssuerNamespace('org.iso.18013.5.1.mDL', {
+      first_name: 'First',
+      last_name: 'Last',
+    })
+
+    const issuerSigned = await issuer.sign({
+      signingKey: CoseKey.fromJwk(ISSUER_PRIVATE_KEY_JWK),
+      certificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+      algorithm: SignatureAlgorithm.ES256,
+      digestAlgorithm: 'SHA-256',
+      deviceKeyInfo: { deviceKey: DeviceKey.fromJwk(DEVICE_JWK_PUBLIC) },
+      validityInfo: { signed, validFrom, validUntil },
+      status: { statusList: { idx: 3, uri } },
+    })
+
+    const encodedIssuerSigned = issuerSigned.encodedForOid4Vci
+
+    // openid4vci protocol
+
+    const credential = IssuerSigned.fromEncodedForOid4Vci(encodedIssuerSigned)
+
+    await expect(
+      Holder.verifyIssuerSigned(
+        {
+          issuerSigned: credential,
+          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedRevocationCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+        },
+        mdocContext
+      )
+    ).rejects.toThrow(
+      'Could not verify status list token. @owf/mdoc currently does not support JWT format for status list, only CWT'
+    )
+  })
+
   test('Verify mdoc with status status_list check with invalid trusted certificates', async () => {
     const idx = 3
     const uri = 'https://example.org/status-list/10'
@@ -539,7 +602,7 @@ suite('Verification', () => {
     )
 
     nock('https://example.org')
-      .matchHeader('Accept', /application\/statuslist\+(cwt|jwt),application\/statuslist\+(cwt|jwt)/)
+      .matchHeader('Accept', /application\/statuslist\+cwt/)
       .persist()
       .get('/status-list/10')
       .reply(200, Buffer.from(encodedCwt), { 'Content-Type': MediaTypes.StatusListCwt })
@@ -572,11 +635,11 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedRevocationCertificates: [new Uint8Array([0, 1, 2, 3])],
+          trustedRevocationCertificates: [new Uint8Array(new X509Certificate(INVALID_CERTIFICATE).rawData)],
         },
         mdocContext
       )
-    ).rejects.toThrow()
+    ).rejects.toThrow('No trusted certificate was found while validating the X.509 chain')
   })
 
   test('Verify mdoc with status status_list check while credential is suspended', async () => {
@@ -599,7 +662,7 @@ suite('Verification', () => {
     )
 
     nock('https://example.org')
-      .matchHeader('Accept', /application\/statuslist\+(cwt|jwt),application\/statuslist\+(cwt|jwt)/)
+      .matchHeader('Accept', /application\/statuslist\+cwt/)
       .persist()
       .get('/status-list/20')
       .reply(200, Buffer.from(encodedCwt), { 'Content-Type': MediaTypes.StatusListCwt })
