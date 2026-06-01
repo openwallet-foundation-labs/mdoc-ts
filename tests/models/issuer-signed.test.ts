@@ -36,8 +36,13 @@ describe('Issuer signed', () => {
     })
 
     const isSignatureValid = await issuerSigned.issuerAuth.verifySignature(
-      {},
-      { x509: mdocContext.x509, verify: mdocContext.cose.sign1.verify }
+      {
+        key: await mdocContext.x509.getPublicKey({
+          certificate: issuerSigned.issuerAuth.certificate,
+          algorithm: SignatureAlgorithm.ES256,
+        }),
+      },
+      { verify: mdocContext.cose.sign1.verify }
     )
 
     expect(isSignatureValid).toBeTruthy()
@@ -45,8 +50,13 @@ describe('Issuer signed', () => {
     const issuerSignedDecoded = IssuerSigned.fromEncodedForOid4Vci(encodedIssuerSigned)
 
     const isSignatureValidFromDecoded = await issuerSignedDecoded.issuerAuth.verifySignature(
-      {},
-      { x509: mdocContext.x509, verify: mdocContext.cose.sign1.verify }
+      {
+        key: await mdocContext.x509.getPublicKey({
+          certificate: issuerSigned.issuerAuth.certificate,
+          algorithm: SignatureAlgorithm.ES256,
+        }),
+      },
+      { verify: mdocContext.cose.sign1.verify }
     )
     expect(isSignatureValidFromDecoded).toBeTruthy()
   })

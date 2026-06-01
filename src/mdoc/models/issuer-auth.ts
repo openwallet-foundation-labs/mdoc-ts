@@ -2,15 +2,25 @@ import {
   CosePayloadMustBeDefinedError,
   cborDecode,
   DataItem,
+  MacAlgorithm,
+  RegisteredCwtHeaderClaimKey,
   Sign1,
   type Sign1EncodedStructure,
   type Sign1Options,
+  SignatureAlgorithm,
   zUint8Array,
 } from '@owf/cose'
 import { fetchStatusList, StatusListCwt, verifyStatus } from '@owf/token-status-list'
 import z from 'zod'
 import type { MdocContext } from '../../context.js'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback.js'
+import {
+  InvalidAlgorithmError,
+  InvalidMessageAuthenticationCode,
+  InvalidSignatureError,
+  NoPublicKeySetOnStatusListError,
+  UnableToExtractX5ChainFromCwtError,
+} from '../errors.js'
 import { MobileSecurityObject, type MobileSecurityObjectEncodedStructure } from './mobile-security-object.js'
 
 export type IssuerAuthEncodedStructure = Sign1EncodedStructure
@@ -51,13 +61,35 @@ export class IssuerAuth extends Sign1 {
     return mso
   }
 
+  public getIssuingCountry(ctx: Pick<MdocContext, 'x509'>) {
+    const countryName = ctx.x509.getIssuerNameField({
+      certificate: this.certificate,
+      field: 'C',
+    })[0]
+
+    return countryName
+  }
+
+  public getIssuingStateOrProvince(ctx: Pick<MdocContext, 'x509'>) {
+    const stateOrProvince = ctx.x509.getIssuerNameField({
+      certificate: this.certificate,
+      field: 'ST',
+    })[0]
+
+    return stateOrProvince
+  }
+
   /**
    * @todo use the certificate provided in the status
    * @todo handle the identifierList
    */
   public async verifyStatus(
-    { now = new Date(), checkFreshness }: { now?: Date; checkFreshness?: boolean },
-    ctx: Pick<MdocContext, 'fetch'>
+    {
+      now = new Date(),
+      checkFreshness,
+      trustedRevocationCertificates,
+    }: { now?: Date; checkFreshness?: boolean; trustedRevocationCertificates?: Array<Uint8Array> },
+    ctx: Pick<MdocContext, 'fetch' | 'x509' | 'cose'>
   ) {
     if (!this.mobileSecurityObject.status) return undefined
     if (!this.mobileSecurityObject.status.statusList) return undefined
@@ -68,10 +100,50 @@ export class IssuerAuth extends Sign1 {
     const { uri, idx } = this.mobileSecurityObject.status.statusList
     const statusListToken = await fetchStatusList({ uri, customFetcher: ctx.fetch })
     if (typeof statusListToken === 'string') {
+      // TODO: add signature check
       verifyStatus({ uri, idx, now, token: statusListToken, checkFreshness })
       return true
     }
     const cwt = StatusListCwt.fromToken(statusListToken)
+
+    // TODO: we should add this utility section to the cwt/sign1/mac0 class
+    // TODO: support multiple ways to set the public key
+    const x5c = cwt.protectedHeaders?.headers.get(RegisteredCwtHeaderClaimKey.X5Chain) as
+      | Uint8Array
+      | Uint8Array[]
+      | undefined
+
+    if (!x5c) {
+      throw new UnableToExtractX5ChainFromCwtError()
+    }
+
+    const algorithm = this.protectedHeaders.headers?.get(RegisteredCwtHeaderClaimKey.Algorithm) as SignatureAlgorithm
+
+    const x5chain = x5c instanceof Uint8Array ? [x5c] : x5c
+    const [certificate] = x5chain
+    if (trustedRevocationCertificates) {
+      await ctx.x509.verifyCertificateChain({ trustedCertificates: trustedRevocationCertificates, x5chain })
+    }
+    const publicKey = await ctx.x509.getPublicKey({ certificate, algorithm })
+    const alg = algorithm ?? publicKey.algorithm
+    if (!publicKey) {
+      throw new NoPublicKeySetOnStatusListError()
+    }
+    if (Object.values(SignatureAlgorithm).includes(alg as SignatureAlgorithm)) {
+      if (!(await cwt.verifySignature({ key: publicKey }, ctx.cose.sign1))) {
+        throw new InvalidSignatureError()
+      }
+      // TODO: `publicKey.algorithm` should also be `MacAlgorithm`
+    } else if (Object.values(MacAlgorithm).includes(alg as unknown as MacAlgorithm)) {
+      if (!(await cwt.verifyAuthenticationCode({ key: publicKey }, ctx.cose.mac0))) {
+        throw new InvalidMessageAuthenticationCode()
+      }
+    } else {
+      throw new InvalidAlgorithmError(
+        `Invalid algorithm (claim ${RegisteredCwtHeaderClaimKey.Algorithm}) set. Value '${alg}'`
+      )
+    }
+
     cwt.verifyStatus({ uri, idx, now, checkFreshness })
     return true
   }
@@ -81,6 +153,7 @@ export class IssuerAuth extends Sign1 {
       verificationCallback?: VerificationCallback
       now?: Date
       trustedCertificates?: Array<Uint8Array>
+      trustedRevocationCertificates?: Array<Uint8Array>
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       skewSeconds?: number
@@ -128,7 +201,10 @@ export class IssuerAuth extends Sign1 {
 
     if (!disableRevocationCheck) {
       try {
-        await this.verifyStatus({ now, checkFreshness: true }, ctx)
+        await this.verifyStatus(
+          { now, checkFreshness: true, trustedRevocationCertificates: options.trustedRevocationCertificates },
+          ctx
+        )
       } catch (err) {
         onCheck({
           status: 'FAILED',
@@ -138,7 +214,8 @@ export class IssuerAuth extends Sign1 {
       }
     }
 
-    const isSignatureValid = await this.verifySignature({}, { x509: ctx.x509, verify: ctx.cose.sign1.verify })
+    const publicKey = await ctx.x509.getPublicKey({ certificate: this.certificate, algorithm: this.algorithm })
+    const isSignatureValid = await this.verifySignature({ key: publicKey }, { verify: ctx.cose.sign1.verify })
 
     onCheck({
       status: isSignatureValid ? 'PASSED' : 'FAILED',

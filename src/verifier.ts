@@ -13,6 +13,7 @@ export class Verifier {
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       trustedCertificates: Uint8Array[]
+      trustedRevocationCertificates?: Uint8Array[]
       now?: Date
       onCheck?: VerificationCallback
       skewSeconds?: number

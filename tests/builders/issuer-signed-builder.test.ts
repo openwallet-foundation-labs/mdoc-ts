@@ -68,8 +68,13 @@ describe('issuer signed builder', () => {
     expect(issuerSigned.issuerAuth.signature).toBeDefined()
 
     const verificationResult = await issuerSigned.issuerAuth.verifySignature(
-      {},
-      { x509: mdocContext.x509, verify: mdocContext.cose.sign1.verify }
+      {
+        key: await mdocContext.x509.getPublicKey({
+          certificate: issuerSigned.issuerAuth.certificate,
+          algorithm: SignatureAlgorithm.ES256,
+        }),
+      },
+      { verify: mdocContext.cose.sign1.verify }
     )
 
     expect(verificationResult).toBeTruthy()
