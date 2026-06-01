@@ -52,15 +52,16 @@ export class DeviceSignedBuilder {
     derCertificate: string
   }): Promise<DeviceSigned> {
     const protectedHeaders = ProtectedHeaders.create({
-      protectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm]]),
+      protectedHeaders: new Map<number, unknown>([
+        [RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm],
+        [RegisteredCwtHeaderClaimKey.X5Chain, base64.decode(options.derCertificate)],
+      ]),
     })
 
-    const unprotectedHeaders = UnprotectedHeaders.create({
-      unprotectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.X5Chain, base64.decode(options.derCertificate)]]),
-    })
+    const unprotectedHeaders = UnprotectedHeaders.create({})
 
     if (options.signingKey.keyId) {
-      unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.signingKey.keyId)
+      protectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.signingKey.keyId)
     }
 
     const deviceAuthentication = DeviceAuthentication.create({
@@ -99,15 +100,16 @@ export class DeviceSignedBuilder {
     derCertificate: string
   }): Promise<DeviceSigned> {
     const protectedHeaders = ProtectedHeaders.create({
-      protectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm]]),
+      protectedHeaders: new Map<number, unknown>([
+        [RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm],
+        [RegisteredCwtHeaderClaimKey.X5Chain, base64.decode(options.derCertificate)],
+      ]),
     })
 
-    const unprotectedHeaders = UnprotectedHeaders.create({
-      unprotectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.X5Chain, base64.decode(options.derCertificate)]]),
-    })
+    const unprotectedHeaders = UnprotectedHeaders.create({})
 
     if (options.privateKey.keyId) {
-      unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.privateKey.keyId)
+      protectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.privateKey.keyId)
     }
 
     const deviceAuthentication = DeviceAuthentication.create({

@@ -24,6 +24,7 @@ export class Holder {
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       trustedCertificates?: Array<Uint8Array>
+      trustedRevocationCertificates?: Array<Uint8Array>
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>

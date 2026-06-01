@@ -34,9 +34,10 @@ export class ReaderAuth extends Sign1 {
 
     const isValid = await this.verifySignature(
       {
+        key: await ctx.x509.getPublicKey({ certificate: this.certificate, algorithm: this.algorithm }),
         detachedPayload: readerAuthentication.encode({ asDataItem: true }),
       },
-      { verify: ctx.cose.sign1.verify, x509: ctx.x509 }
+      { verify: ctx.cose.sign1.verify }
     )
 
     onCheck({

@@ -125,6 +125,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       trustedCertificates: Uint8Array[]
+      trustedRevocationCertificates?: Uint8Array[]
       now?: Date
       onCheck?: VerificationCallback
       skewSeconds?: number
@@ -166,6 +167,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
           trustedCertificates: options.trustedCertificates,
           skewSeconds: options.skewSeconds,
           disableStatusValidation: options.disableStatusValidation,
+          trustedRevocationCertificates: options.trustedRevocationCertificates,
         },
         ctx
       )
@@ -238,14 +240,13 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
           deviceNamespaces,
         }).encode({ asDataItem: true })
 
-        const unprotectedHeaders = signingKey.keyId
-          ? UnprotectedHeaders.create({
-              unprotectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.KeyId, signingKey.keyId]]),
-            })
-          : UnprotectedHeaders.create({})
+        const unprotectedHeaders = UnprotectedHeaders.create({})
 
         const protectedHeaders = ProtectedHeaders.create({
-          protectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.Algorithm, signingKey.algorithm]]),
+          protectedHeaders: new Map<number, unknown>([
+            [RegisteredCwtHeaderClaimKey.Algorithm, signingKey.algorithm],
+            [RegisteredCwtHeaderClaimKey.KeyId, signingKey.keyId],
+          ]),
         })
 
         const deviceAuthOptions: DeviceAuthOptions = {}
