@@ -27,7 +27,7 @@
     "changeset-version": "pnpm changeset version && pnpm style:fix"
   },
   "dependencies": {
-    "@owf/cose": "0.3.0-alpha-20260528103055",
+    "@owf/cose": "0.3.0-alpha-20260601075923",
     "@owf/identity-common": "0.3.0-alpha-20260528103055",
     "@owf/token-status-list": "0.3.0-alpha-20260528103055",
     "zod": "^4.4.3"
