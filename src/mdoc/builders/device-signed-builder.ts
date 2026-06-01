@@ -6,7 +6,7 @@ import {
   type SignatureAlgorithm,
   UnprotectedHeaders,
 } from '@owf/cose'
-import { base64, stringToBytes } from '@owf/identity-common'
+import { stringToBytes } from '@owf/identity-common'
 import type { MdocContext } from '../../context'
 import {
   DeviceAuth,
@@ -49,19 +49,18 @@ export class DeviceSignedBuilder {
     signingKey: CoseKey
     algorithm: SignatureAlgorithm
     sessionTranscript: SessionTranscript
-    derCertificate: string
+    certificate: Uint8Array
   }): Promise<DeviceSigned> {
     const protectedHeaders = ProtectedHeaders.create({
-      protectedHeaders: new Map<number, unknown>([
-        [RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm],
-        [RegisteredCwtHeaderClaimKey.X5Chain, base64.decode(options.derCertificate)],
-      ]),
+      protectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm]]),
     })
 
-    const unprotectedHeaders = UnprotectedHeaders.create({})
+    const unprotectedHeaders = UnprotectedHeaders.create({
+      unprotectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.X5Chain, [options.certificate]]]),
+    })
 
     if (options.signingKey.keyId) {
-      protectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.signingKey.keyId)
+      unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.signingKey.keyId)
     }
 
     const deviceAuthentication = DeviceAuthentication.create({
@@ -97,16 +96,15 @@ export class DeviceSignedBuilder {
     privateKey: CoseKey
     sessionTranscript: SessionTranscript
     algorithm: MacAlgorithm
-    derCertificate: string
+    certificate: Uint8Array
   }): Promise<DeviceSigned> {
     const protectedHeaders = ProtectedHeaders.create({
-      protectedHeaders: new Map<number, unknown>([
-        [RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm],
-        [RegisteredCwtHeaderClaimKey.X5Chain, base64.decode(options.derCertificate)],
-      ]),
+      protectedHeaders: new Map<number, unknown>([[RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm]]),
     })
 
-    const unprotectedHeaders = UnprotectedHeaders.create({})
+    const unprotectedHeaders = UnprotectedHeaders.create({
+      unprotectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.X5Chain, [options.certificate]]]),
+    })
 
     if (options.privateKey.keyId) {
       protectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.privateKey.keyId)

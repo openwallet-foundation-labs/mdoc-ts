@@ -131,19 +131,15 @@ export class IssuerSignedBuilder {
     })
 
     const protectedHeaders = ProtectedHeaders.create({
-      protectedHeaders: new Map<number, unknown>([
-        [RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm],
-        [
-          RegisteredCwtHeaderClaimKey.X5Chain,
-          options.certificates.length === 1 ? options.certificates[0] : options.certificates,
-        ],
-      ]),
+      protectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.Algorithm, options.algorithm]]),
     })
 
-    const unprotectedHeaders = UnprotectedHeaders.create({})
+    const unprotectedHeaders = UnprotectedHeaders.create({
+      unprotectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.X5Chain, options.certificates]]),
+    })
 
     if (options.signingKey.keyId) {
-      protectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.signingKey.keyId)
+      unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.signingKey.keyId)
     }
 
     const issuerAuth = await IssuerAuth.create({
