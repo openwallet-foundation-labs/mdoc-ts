@@ -5,7 +5,6 @@ import {
   type DeviceNamespaces,
   DeviceRequest,
   DeviceResponse,
-  type GetTrustedStatusCertificates,
   IssuerSigned,
   SessionTranscript,
   type VerificationCallback,
@@ -24,12 +23,11 @@ export class Holder {
       now?: Date
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
-      trustedCertificates?: Array<Uint8Array>
-      getTrustedStatusCertificates?: GetTrustedStatusCertificates
+      trustedCertificates?: Array<{ issuance: Uint8Array[]; status?: Uint8Array[] }>
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>
-  ) {
+  ): Promise<{ issuanceCertificate: Uint8Array; statusCertificate?: Uint8Array }> {
     const issuerSigned =
       typeof options.issuerSigned === 'string'
         ? IssuerSigned.decode(base64url.decode(options.issuerSigned))
@@ -37,7 +35,7 @@ export class Holder {
           ? IssuerSigned.decode(options.issuerSigned)
           : options.issuerSigned
 
-    await issuerSigned.verify(options, ctx)
+    return await issuerSigned.verify(options, ctx)
   }
 
   public static async verifyDeviceRequest(

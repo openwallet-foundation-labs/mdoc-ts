@@ -24,7 +24,7 @@ describe('Animo mdoc 0.5.x mdoc implementation', () => {
     await expect(
       decoded.verify(
         {
-          trustedCertificates: [new Uint8Array(rootCertificate.rawData)],
+          trustedCertificates: [{ issuance: [new Uint8Array(rootCertificate.rawData)] }],
           sessionTranscript: await SessionTranscript.forOid4Vp(
             {
               clientId,
@@ -38,6 +38,6 @@ describe('Animo mdoc 0.5.x mdoc implementation', () => {
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
   })
 })

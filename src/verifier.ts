@@ -1,12 +1,7 @@
 import type { CoseKey } from '@owf/cose'
 import type { MdocContext } from './context.js'
 import type { VerificationCallback } from './mdoc/check-callback.js'
-import {
-  type DeviceRequest,
-  DeviceResponse,
-  type GetTrustedStatusCertificates,
-  type SessionTranscript,
-} from './mdoc/index.js'
+import { type DeviceRequest, DeviceResponse, type SessionTranscript } from './mdoc/index.js'
 
 export class Verifier {
   public static async verifyDeviceResponse(
@@ -17,8 +12,7 @@ export class Verifier {
       ephemeralReaderKey?: CoseKey
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
-      trustedCertificates: Uint8Array[]
-      getTrustedStatusCertificates?: GetTrustedStatusCertificates
+      trustedCertificates: Array<{ issuance: Uint8Array[]; status?: Uint8Array[] }>
       now?: Date
       onCheck?: VerificationCallback
       skewSeconds?: number

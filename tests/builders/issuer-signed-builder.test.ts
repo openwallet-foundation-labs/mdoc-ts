@@ -84,7 +84,7 @@ describe('issuer signed builder', () => {
     await expect(
       issuerSigned.issuerAuth.verify(
         {
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: [{ issuance: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)] }],
         },
         mdocContext
       )

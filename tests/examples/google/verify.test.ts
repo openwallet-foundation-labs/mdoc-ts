@@ -22,7 +22,9 @@ describe('Google CM Wallet mdoc implementation', () => {
     await expect(
       DeviceResponse.decode(deviceResponse).verify(
         {
-          trustedCertificates: [new Uint8Array(rootCertificate.rawData), new Uint8Array(signingCertificate.rawData)],
+          trustedCertificates: [
+            { issuance: [new Uint8Array(rootCertificate.rawData), new Uint8Array(signingCertificate.rawData)] },
+          ],
           sessionTranscript: await SessionTranscript.forOid4VpDcApiDraft24(
             {
               origin,
@@ -35,7 +37,7 @@ describe('Google CM Wallet mdoc implementation', () => {
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
   })
 
   test('decode and encode DeviceResponse gives same result', async () => {

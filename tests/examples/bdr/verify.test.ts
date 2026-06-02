@@ -10,7 +10,7 @@ describe('BDR mDL implementation', () => {
 
     await issuerSigned.issuerAuth.verify(
       {
-        trustedCertificates: [new Uint8Array(issuerCertificate.rawData)],
+        trustedCertificates: [{ issuance: [new Uint8Array(issuerCertificate.rawData)] }],
         disableCertificateChainValidation: false,
         now: new Date('2026-01-01'),
       },

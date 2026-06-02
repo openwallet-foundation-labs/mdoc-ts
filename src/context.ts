@@ -32,11 +32,18 @@ export interface MdocContext {
       algorithm?: SignatureAlgorithm | MacAlgorithm
     }) => Promise<CoseKey>
 
+    /**
+     *
+     * Verify a X.509 certificate chain
+     *
+     * Return the parsed chain where index 0 is the leaf certificate and the last entry is the X.509 certificate found in the trusted certificates (root)
+     *
+     */
     verifyCertificateChain: (input: {
       trustedCertificates: Uint8Array[]
       x5chain: Uint8Array[]
       now?: Date
-    }) => MaybePromise<void>
+    }) => MaybePromise<{ chain: Uint8Array[] }>
 
     getCertificateData: (input: { certificate: Uint8Array }) => MaybePromise<{
       issuerName: string
