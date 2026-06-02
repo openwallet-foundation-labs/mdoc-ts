@@ -3,7 +3,7 @@ import { base64url } from '@owf/identity-common'
 import { z } from 'zod'
 import type { MdocContext } from '../../context'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback'
-import { IssuerAuth, type IssuerAuthEncodedStructure } from './issuer-auth'
+import { type GetTrustedStatusCertificates, IssuerAuth, type IssuerAuthEncodedStructure } from './issuer-auth'
 import { IssuerNamespaces, type IssuerNamespacesEncodedStructure } from './issuer-namespaces'
 import type { IssuerSignedItem } from './issuer-signed-item'
 import type { Namespace } from './namespace'
@@ -80,7 +80,7 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
       verificationCallback?: VerificationCallback
       now?: Date
       trustedCertificates?: Array<Uint8Array>
-      trustedStatusCertificates?: Array<Uint8Array>
+      getTrustedStatusCertificates?: GetTrustedStatusCertificates
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       skewSeconds?: number

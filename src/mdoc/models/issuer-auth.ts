@@ -30,6 +30,10 @@ export type IssuerAuthOptions = Omit<Sign1Options, 'payload'> & {
   payload?: Sign1Options['payload'] | MobileSecurityObject
 }
 
+export type GetTrustedStatusCertificates = (options: {
+  statusListCertificateChain?: Array<Uint8Array>
+}) => Promise<{ trustedStatusListCertificateChain?: Array<Uint8Array> }>
+
 export class IssuerAuth extends Sign1 {
   public static create(options: IssuerAuthOptions): IssuerAuth {
     return super.create({
@@ -89,8 +93,12 @@ export class IssuerAuth extends Sign1 {
     {
       now = new Date(),
       checkFreshness,
-      trustedStatusCertificates,
-    }: { now?: Date; checkFreshness?: boolean; trustedStatusCertificates: Array<Uint8Array> },
+      getTrustedStatusCertificates,
+    }: {
+      now?: Date
+      checkFreshness?: boolean
+      getTrustedStatusCertificates?: GetTrustedStatusCertificates
+    },
     ctx: Pick<MdocContext, 'fetch' | 'x509' | 'cose'>
   ) {
     if (!this.mobileSecurityObject.status) return undefined
@@ -121,7 +129,7 @@ export class IssuerAuth extends Sign1 {
       throw new UnableToExtractX5ChainFromCwtError()
     }
 
-    const algorithm = this.protectedHeaders.headers?.get(RegisteredCwtHeaderClaimKey.Algorithm) as SignatureAlgorithm
+    const algorithm = cwt.protectedHeaders?.headers.get(RegisteredCwtHeaderClaimKey.Algorithm) as SignatureAlgorithm
     const x5chain =
       x5c instanceof Uint8Array
         ? [x5c]
@@ -135,13 +143,18 @@ export class IssuerAuth extends Sign1 {
 
     const [certificate] = x5chain
 
-    if (trustedStatusCertificates.length === 0) {
+    const trustedStatusCertificates = await getTrustedStatusCertificates?.({ statusListCertificateChain: x5chain })
+
+    if (!trustedStatusCertificates || trustedStatusCertificates.trustedStatusListCertificateChain?.length === 0) {
       throw new TrustedRevocationCertificatesMustContainAtleastOneCertificateError(
-        'Atleast one certificate is required to check the status of the mdoc. Make sure to provide it in the `trustedStatusCertificates`'
+        'Atleast one certificate is required to check the status of the mdoc. Make sure the `getTrustedStatusCertificates` callback is correctly imlpemented.'
       )
     }
 
-    await ctx.x509.verifyCertificateChain({ trustedCertificates: trustedStatusCertificates, x5chain })
+    await ctx.x509.verifyCertificateChain({
+      trustedCertificates: trustedStatusCertificates.trustedStatusListCertificateChain as Array<Uint8Array>,
+      x5chain,
+    })
 
     const publicKey = await ctx.x509.getPublicKey({ certificate, algorithm })
     const alg = algorithm ?? publicKey.algorithm
@@ -174,7 +187,7 @@ export class IssuerAuth extends Sign1 {
       verificationCallback?: VerificationCallback
       now?: Date
       trustedCertificates?: Array<Uint8Array>
-      trustedStatusCertificates?: Array<Uint8Array>
+      getTrustedStatusCertificates?: GetTrustedStatusCertificates
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       skewSeconds?: number
@@ -186,7 +199,6 @@ export class IssuerAuth extends Sign1 {
     const disableCertificateChainValidation = options.disableCertificateChainValidation ?? false
     const disableStatusValidation = options.disableStatusValidation ?? false
     const trustedCertificates = options.trustedCertificates ?? []
-    const trustedStatusCertificates = options.trustedStatusCertificates ?? []
     const skewSeconds = options.skewSeconds ?? 30
 
     const onCheck = onCategoryCheck(verificationCallback, 'ISSUER_AUTH')
@@ -227,7 +239,7 @@ export class IssuerAuth extends Sign1 {
           {
             now,
             checkFreshness: true,
-            trustedStatusCertificates,
+            getTrustedStatusCertificates: options.getTrustedStatusCertificates,
           },
           ctx
         )

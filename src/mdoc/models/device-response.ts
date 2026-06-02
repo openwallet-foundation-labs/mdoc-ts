@@ -24,6 +24,7 @@ import { DeviceSignature } from './device-signature'
 import { DeviceSigned } from './device-signed'
 import { Document, type DocumentEncodedStructure } from './document'
 import { DocumentError, type DocumentErrorStructure } from './document-error'
+import type { GetTrustedStatusCertificates } from './issuer-auth'
 import { IssuerSigned } from './issuer-signed'
 import type { SessionTranscript } from './session-transcript'
 
@@ -125,7 +126,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       trustedCertificates: Uint8Array[]
-      trustedStatusCertificates?: Uint8Array[]
+      getTrustedStatusCertificates?: GetTrustedStatusCertificates
       now?: Date
       onCheck?: VerificationCallback
       skewSeconds?: number
@@ -167,7 +168,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
           trustedCertificates: options.trustedCertificates,
           skewSeconds: options.skewSeconds,
           disableStatusValidation: options.disableStatusValidation,
-          trustedStatusCertificates: options.trustedStatusCertificates,
+          getTrustedStatusCertificates: options.getTrustedStatusCertificates,
         },
         ctx
       )

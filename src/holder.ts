@@ -5,6 +5,7 @@ import {
   type DeviceNamespaces,
   DeviceRequest,
   DeviceResponse,
+  type GetTrustedStatusCertificates,
   IssuerSigned,
   SessionTranscript,
   type VerificationCallback,
@@ -24,7 +25,7 @@ export class Holder {
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       trustedCertificates?: Array<Uint8Array>
-      trustedStatusCertificates?: Array<Uint8Array>
+      getTrustedStatusCertificates?: GetTrustedStatusCertificates
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>
