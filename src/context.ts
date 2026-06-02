@@ -1,4 +1,4 @@
-import type { DigestAlgorithm, Mac0Context, Sign1Context } from '@owf/cose'
+import type { CoseKey, DigestAlgorithm, Mac0Context, Sign1Context, SignatureAlgorithm } from '@owf/cose'
 
 type MaybePromise<T> = Promise<T> | T
 
@@ -26,9 +26,9 @@ export interface MdocContext {
   }
 
   x509: {
-    getIssuerNameField: Sign1Context['x509']['getIssuerNameField']
+    getIssuerNameField: (options: { certificate: Uint8Array; field: string }) => string[]
 
-    getPublicKey: Sign1Context['x509']['getPublicKey']
+    getPublicKey: (options: { certificate: Uint8Array; algorithm?: SignatureAlgorithm }) => Promise<CoseKey>
 
     verifyCertificateChain: (input: {
       trustedCertificates: Uint8Array[]
