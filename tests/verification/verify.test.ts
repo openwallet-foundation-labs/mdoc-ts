@@ -9,6 +9,7 @@ import {
   DeviceRequest,
   DeviceResponse,
   DocRequest,
+  type GetTrustedStatusCertificates,
   Holder,
   Issuer,
   IssuerSigned,
@@ -36,6 +37,24 @@ const validFrom = new Date(signed)
 validFrom.setMinutes(signed.getMinutes() + 5)
 const validUntil = new Date(signed)
 validUntil.setFullYear(signed.getFullYear() + 30)
+
+const validGetTrustedStatusCertificates: GetTrustedStatusCertificates = async () => {
+  return {
+    trustedStatusListCertificateChain: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+  }
+}
+
+const invalidGetTrustedStatusCertificates: GetTrustedStatusCertificates = async () => {
+  return {
+    trustedStatusListCertificateChain: [new Uint8Array(new X509Certificate(INVALID_CERTIFICATE).rawData)],
+  }
+}
+
+const emptyGetTrustedStatusCertificates: GetTrustedStatusCertificates = async () => {
+  return {
+    trustedStatusListCertificateChain: [],
+  }
+}
 
 suite('Verification', () => {
   test('Verify simple mdoc', async () => {
@@ -356,7 +375,7 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          getTrustedStatusCertificates: validGetTrustedStatusCertificates,
         },
         mdocContext
       )
@@ -409,7 +428,7 @@ suite('Verification', () => {
         deviceResponse: decodedDeviceResponse,
         sessionTranscript: fakeSessionTranscript,
         trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-        trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+        getTrustedStatusCertificates: validGetTrustedStatusCertificates,
       },
       mdocContext
     )
@@ -468,7 +487,7 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          getTrustedStatusCertificates: validGetTrustedStatusCertificates,
         },
         mdocContext
       )
@@ -521,7 +540,7 @@ suite('Verification', () => {
         deviceResponse: decodedDeviceResponse,
         sessionTranscript: fakeSessionTranscript,
         trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-        trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+        getTrustedStatusCertificates: validGetTrustedStatusCertificates,
       },
       mdocContext
     )
@@ -575,7 +594,7 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          getTrustedStatusCertificates: validGetTrustedStatusCertificates,
         },
         mdocContext
       )
@@ -636,12 +655,12 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedStatusCertificates: [],
+          getTrustedStatusCertificates: emptyGetTrustedStatusCertificates,
         },
         mdocContext
       )
     ).rejects.toThrow(
-      'Atleast one certificate is required to check the status of the mdoc. Make sure to provide it in the `trustedStatusCertificates`'
+      'Atleast one certificate is required to check the status of the mdoc. Make sure the `getTrustedStatusCertificates` callback is correctly imlpemented.'
     )
   })
 
@@ -698,7 +717,7 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedStatusCertificates: [new Uint8Array(new X509Certificate(INVALID_CERTIFICATE).rawData)],
+          getTrustedStatusCertificates: invalidGetTrustedStatusCertificates,
         },
         mdocContext
       )
@@ -758,7 +777,7 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          getTrustedStatusCertificates: validGetTrustedStatusCertificates,
         },
         mdocContext
       )
