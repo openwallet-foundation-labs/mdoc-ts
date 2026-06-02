@@ -80,7 +80,7 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
       verificationCallback?: VerificationCallback
       now?: Date
       trustedCertificates?: Array<Uint8Array>
-      trustedRevocationCertificates?: Array<Uint8Array>
+      trustedStatusCertificates?: Array<Uint8Array>
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       skewSeconds?: number

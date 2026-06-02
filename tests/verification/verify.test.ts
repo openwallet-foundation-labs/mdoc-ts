@@ -356,7 +356,7 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedRevocationCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
         },
         mdocContext
       )
@@ -409,7 +409,7 @@ suite('Verification', () => {
         deviceResponse: decodedDeviceResponse,
         sessionTranscript: fakeSessionTranscript,
         trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-        trustedRevocationCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+        trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
       },
       mdocContext
     )
@@ -468,7 +468,7 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedRevocationCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
         },
         mdocContext
       )
@@ -521,7 +521,7 @@ suite('Verification', () => {
         deviceResponse: decodedDeviceResponse,
         sessionTranscript: fakeSessionTranscript,
         trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-        trustedRevocationCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+        trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
       },
       mdocContext
     )
@@ -575,7 +575,7 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedRevocationCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
         },
         mdocContext
       )
@@ -636,12 +636,12 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedRevocationCertificates: [],
+          trustedStatusCertificates: [],
         },
         mdocContext
       )
     ).rejects.toThrow(
-      'Atleast one certificate is required to check the status of the mdoc. Make sure to provide it in the `trustedRevocationCertificates`'
+      'Atleast one certificate is required to check the status of the mdoc. Make sure to provide it in the `trustedStatusCertificates`'
     )
   })
 
@@ -698,7 +698,7 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedRevocationCertificates: [new Uint8Array(new X509Certificate(INVALID_CERTIFICATE).rawData)],
+          trustedStatusCertificates: [new Uint8Array(new X509Certificate(INVALID_CERTIFICATE).rawData)],
         },
         mdocContext
       )
@@ -758,7 +758,7 @@ suite('Verification', () => {
         {
           issuerSigned: credential,
           trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          trustedRevocationCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedStatusCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
         },
         mdocContext
       )
