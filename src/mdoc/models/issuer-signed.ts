@@ -3,7 +3,7 @@ import { base64url } from '@owf/identity-common'
 import { z } from 'zod'
 import type { MdocContext } from '../../context'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback'
-import { type GetTrustedStatusCertificates, IssuerAuth, type IssuerAuthEncodedStructure } from './issuer-auth'
+import { IssuerAuth, type IssuerAuthEncodedStructure } from './issuer-auth'
 import { IssuerNamespaces, type IssuerNamespacesEncodedStructure } from './issuer-namespaces'
 import type { IssuerSignedItem } from './issuer-signed-item'
 import type { Namespace } from './namespace'
@@ -79,14 +79,13 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
     options: {
       verificationCallback?: VerificationCallback
       now?: Date
-      trustedCertificates?: Array<Uint8Array>
-      getTrustedStatusCertificates?: GetTrustedStatusCertificates
+      trustedCertificates?: Array<{ issuance: Uint8Array[]; status?: Uint8Array[] }>
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'x509' | 'crypto' | 'cose' | 'fetch'>
-  ) {
+  ): Promise<{ issuanceCertificate: Uint8Array; statusCertificate?: Uint8Array }> {
     const { valueDigests, digestAlgorithm } = this.issuerAuth.mobileSecurityObject
 
     const onCheck = onCategoryCheck(options.verificationCallback ?? defaultVerificationCallback, 'DATA_INTEGRITY')
@@ -97,7 +96,7 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
     })
 
     // Verify the issuer auth
-    await this.issuerAuth.verify(options, ctx)
+    const { issuanceCertificate, statusCertificate } = await this.issuerAuth.verify(options, ctx)
 
     const namespaces = this.issuerNamespaces?.issuerNamespaces ?? new Map<string, IssuerSignedItem[]>()
 
@@ -171,6 +170,8 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
         }
       })
     )
+
+    return { statusCertificate, issuanceCertificate }
   }
 
   public static create(options: IssuerSignedOptions): IssuerSigned {

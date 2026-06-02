@@ -24,7 +24,6 @@ import { DeviceSignature } from './device-signature'
 import { DeviceSigned } from './device-signed'
 import { Document, type DocumentEncodedStructure } from './document'
 import { DocumentError, type DocumentErrorStructure } from './document-error'
-import type { GetTrustedStatusCertificates } from './issuer-auth'
 import { IssuerSigned } from './issuer-signed'
 import type { SessionTranscript } from './session-transcript'
 
@@ -125,14 +124,13 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       ephemeralReaderKey?: CoseKey
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
-      trustedCertificates: Uint8Array[]
-      getTrustedStatusCertificates?: GetTrustedStatusCertificates
+      trustedCertificates: Array<{ issuance: Uint8Array[]; status?: Uint8Array[] }>
       now?: Date
       onCheck?: VerificationCallback
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>
-  ) {
+  ): Promise<{ issuanceCertificate: Uint8Array; statusCertificate?: Uint8Array } | undefined> {
     const onCheck = options.onCheck ?? defaultVerificationCallback
 
     const version = this.structure.get('version')
@@ -149,6 +147,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       category: 'DOCUMENT_FORMAT',
     })
 
+    let usedCertificates: { issuanceCertificate: Uint8Array; statusCertificate?: Uint8Array } | undefined
     for (const document of documents ?? []) {
       await document.deviceSigned.deviceAuth.verify(
         {
@@ -160,7 +159,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
         ctx
       )
 
-      await document.issuerSigned.verify(
+      usedCertificates = await document.issuerSigned.verify(
         {
           verificationCallback: onCheck,
           disableCertificateChainValidation: options.disableCertificateChainValidation,
@@ -168,7 +167,6 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
           trustedCertificates: options.trustedCertificates,
           skewSeconds: options.skewSeconds,
           disableStatusValidation: options.disableStatusValidation,
-          getTrustedStatusCertificates: options.getTrustedStatusCertificates,
         },
         ctx
       )
@@ -193,6 +191,8 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
         })
       }
     }
+
+    return usedCertificates
   }
 
   public get encodedForOid4Vp() {

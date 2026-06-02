@@ -19,7 +19,7 @@ describe('Ubique mdoc implementation', () => {
     await expect(
       DeviceResponse.decode(deviceResponse).verify(
         {
-          trustedCertificates: [new Uint8Array(issuerCertificate.rawData)],
+          trustedCertificates: [{ issuance: [new Uint8Array(issuerCertificate.rawData)] }],
           sessionTranscript: await SessionTranscript.forOid4VpDraft18(
             {
               clientId,
@@ -33,6 +33,6 @@ describe('Ubique mdoc implementation', () => {
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
   })
 })

@@ -9,7 +9,6 @@ import {
   DeviceRequest,
   DeviceResponse,
   DocRequest,
-  type GetTrustedStatusCertificates,
   Holder,
   Issuer,
   IssuerSigned,
@@ -38,23 +37,33 @@ validFrom.setMinutes(signed.getMinutes() + 5)
 const validUntil = new Date(signed)
 validUntil.setFullYear(signed.getFullYear() + 30)
 
-const validGetTrustedStatusCertificates: GetTrustedStatusCertificates = async () => {
-  return {
-    trustedStatusListCertificateChain: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-  }
-}
+const validTrustedCertificates = [
+  {
+    issuance: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+    status: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+  },
+]
 
-const invalidGetTrustedStatusCertificates: GetTrustedStatusCertificates = async () => {
-  return {
-    trustedStatusListCertificateChain: [new Uint8Array(new X509Certificate(INVALID_CERTIFICATE).rawData)],
-  }
-}
+const invalidTrustedCertificates = [
+  {
+    issuance: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+    status: [new Uint8Array(new X509Certificate(INVALID_CERTIFICATE).rawData)],
+  },
+]
 
-const emptyGetTrustedStatusCertificates: GetTrustedStatusCertificates = async () => {
-  return {
-    trustedStatusListCertificateChain: [],
-  }
-}
+const emptyTrustedCertificates = [
+  {
+    issuance: [],
+    status: [],
+  },
+]
+
+const emptyStatusTrustedCertificates = [
+  {
+    issuance: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+    status: [],
+  },
+]
 
 suite('Verification', () => {
   test('Verify simple mdoc', async () => {
@@ -84,11 +93,11 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
 
     const deviceRequest = DeviceRequest.create({
       docRequests: [
@@ -136,7 +145,7 @@ suite('Verification', () => {
         deviceRequest,
         deviceResponse: decodedDeviceResponse,
         sessionTranscript: fakeSessionTranscript,
-        trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+        trustedCertificates: validTrustedCertificates,
       },
       mdocContext
     )
@@ -170,11 +179,11 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
 
     const deviceRequest = DeviceRequest.create({
       docRequests: [
@@ -228,7 +237,7 @@ suite('Verification', () => {
           deviceRequest,
           deviceResponse: decodedDeviceResponse,
           sessionTranscript: fakeSessionTranscript,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
@@ -262,11 +271,11 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
 
     const deviceRequest = DeviceRequest.create({
       docRequests: [
@@ -315,7 +324,7 @@ suite('Verification', () => {
           deviceRequest,
           deviceResponse: decodedDeviceResponse,
           sessionTranscript: fakeSessionTranscript,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
@@ -374,12 +383,11 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          getTrustedStatusCertificates: validGetTrustedStatusCertificates,
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
 
     const deviceRequest = DeviceRequest.create({
       docRequests: [
@@ -427,8 +435,7 @@ suite('Verification', () => {
         deviceRequest,
         deviceResponse: decodedDeviceResponse,
         sessionTranscript: fakeSessionTranscript,
-        trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-        getTrustedStatusCertificates: validGetTrustedStatusCertificates,
+        trustedCertificates: validTrustedCertificates,
       },
       mdocContext
     )
@@ -486,12 +493,11 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          getTrustedStatusCertificates: validGetTrustedStatusCertificates,
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
 
     const deviceRequest = DeviceRequest.create({
       docRequests: [
@@ -539,8 +545,7 @@ suite('Verification', () => {
         deviceRequest,
         deviceResponse: decodedDeviceResponse,
         sessionTranscript: fakeSessionTranscript,
-        trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-        getTrustedStatusCertificates: validGetTrustedStatusCertificates,
+        trustedCertificates: validTrustedCertificates,
       },
       mdocContext
     )
@@ -593,8 +598,7 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          getTrustedStatusCertificates: validGetTrustedStatusCertificates,
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
@@ -603,7 +607,7 @@ suite('Verification', () => {
     )
   })
 
-  test('Verify mdoc with status status_list invalid no trusted certificates supplied', async () => {
+  test('Verify mdoc with status invalid no trusted certificates supplied', async () => {
     const idx = 3
     const uri = 'https://example.org/status-list/40'
     const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
@@ -654,13 +658,70 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          getTrustedStatusCertificates: emptyGetTrustedStatusCertificates,
+          trustedCertificates: emptyTrustedCertificates,
+        },
+        mdocContext
+      )
+    ).rejects.toThrow('No trusted certificate was found while validating the X.509 chain')
+  })
+
+  test('Verify mdoc with status status_list invalid no trusted status certificates supplied', async () => {
+    const idx = 3
+    const uri = 'https://example.org/status-list/40'
+    const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
+    const statusListCwt = new StatusListCwt({
+      payload: { statusList, subject: uri },
+      protectedHeaders: ProtectedHeaders.create({
+        protectedHeaders: new Map<number, unknown>([
+          [RegisteredCwtHeaderClaimKey.X5Chain, [new X509Certificate(ISSUER_CERTIFICATE).rawData]],
+          [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
+        ]),
+      }),
+    })
+    statusListCwt.updateStatusList(idx, StatusType.Valid)
+    const encodedCwt = await statusListCwt.signAndEncode(
+      { signingKey: CoseKey.fromJwk(ISSUER_PRIVATE_KEY_JWK), algorithm: SignatureAlgorithm.ES256 },
+      { sign: mdocContext.cose.sign1.sign }
+    )
+    nock('https://example.org')
+      .matchHeader('Accept', /application\/statuslist\+cwt/)
+      .persist()
+      .get('/status-list/40')
+      .reply(200, Buffer.from(encodedCwt), { 'Content-Type': MediaTypes.StatusListCwt })
+
+    const issuer = new Issuer('org.iso.18013.5.1', mdocContext)
+
+    issuer.addIssuerNamespace('org.iso.18013.5.1.mDL', {
+      first_name: 'First',
+      last_name: 'Last',
+    })
+
+    const issuerSigned = await issuer.sign({
+      signingKey: CoseKey.fromJwk(ISSUER_PRIVATE_KEY_JWK),
+      certificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+      algorithm: SignatureAlgorithm.ES256,
+      digestAlgorithm: 'SHA-256',
+      deviceKeyInfo: { deviceKey: DeviceKey.fromJwk(DEVICE_JWK_PUBLIC) },
+      validityInfo: { signed, validFrom, validUntil },
+      status: { statusList: { idx: 3, uri } },
+    })
+
+    const encodedIssuerSigned = issuerSigned.encodedForOid4Vci
+
+    // openid4vci protocol
+
+    const credential = IssuerSigned.fromEncodedForOid4Vci(encodedIssuerSigned)
+
+    await expect(
+      Holder.verifyIssuerSigned(
+        {
+          issuerSigned: credential,
+          trustedCertificates: emptyStatusTrustedCertificates,
         },
         mdocContext
       )
     ).rejects.toThrow(
-      'Atleast one certificate is required to check the status of the mdoc. Make sure the `getTrustedStatusCertificates` callback is correctly imlpemented.'
+      'Atleast one certificate is required to check the status of the mdoc. Make sure to supply them in the `trustedStatusCertificates` option'
     )
   })
 
@@ -716,8 +777,7 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          getTrustedStatusCertificates: invalidGetTrustedStatusCertificates,
+          trustedCertificates: invalidTrustedCertificates,
         },
         mdocContext
       )
@@ -776,8 +836,7 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
-          getTrustedStatusCertificates: validGetTrustedStatusCertificates,
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
@@ -811,11 +870,11 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
 
     const deviceRequest = DeviceRequest.create({
       docRequests: [
@@ -886,7 +945,7 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: validTrustedCertificates,
           now,
         },
         mdocContext
@@ -898,13 +957,13 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: validTrustedCertificates,
           now,
           skewSeconds: 600,
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
   })
 
   test('Fail to verify with not matching device request', async () => {
@@ -934,11 +993,11 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: credential,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
 
     const deviceRequest = DeviceRequest.create({
       docRequests: [
@@ -1004,7 +1063,7 @@ suite('Verification', () => {
           deviceRequest: newDeviceRequest,
           deviceResponse: decodedDeviceResponse,
           sessionTranscript: fakeSessionTranscript,
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: validTrustedCertificates,
         },
         mdocContext
       )
@@ -1032,12 +1091,12 @@ suite('Verification', () => {
       Holder.verifyIssuerSigned(
         {
           issuerSigned: IssuerSigned.fromEncodedForOid4Vci(issuerSigned.encodedForOid4Vci),
-          trustedCertificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+          trustedCertificates: validTrustedCertificates,
           disableStatusValidation: true,
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
 
     // The Status payload survived signing + decode.
     const mso = issuerSigned.issuerAuth.mobileSecurityObject
