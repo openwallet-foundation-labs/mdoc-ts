@@ -125,7 +125,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       trustedCertificates: Uint8Array[]
-      trustedRevocationCertificates?: Uint8Array[]
+      trustedStatusCertificates?: Uint8Array[]
       now?: Date
       onCheck?: VerificationCallback
       skewSeconds?: number
@@ -167,7 +167,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
           trustedCertificates: options.trustedCertificates,
           skewSeconds: options.skewSeconds,
           disableStatusValidation: options.disableStatusValidation,
-          trustedRevocationCertificates: options.trustedRevocationCertificates,
+          trustedStatusCertificates: options.trustedStatusCertificates,
         },
         ctx
       )

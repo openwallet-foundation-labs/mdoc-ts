@@ -89,8 +89,8 @@ export class IssuerAuth extends Sign1 {
     {
       now = new Date(),
       checkFreshness,
-      trustedRevocationCertificates,
-    }: { now?: Date; checkFreshness?: boolean; trustedRevocationCertificates: Array<Uint8Array> },
+      trustedStatusCertificates,
+    }: { now?: Date; checkFreshness?: boolean; trustedStatusCertificates: Array<Uint8Array> },
     ctx: Pick<MdocContext, 'fetch' | 'x509' | 'cose'>
   ) {
     if (!this.mobileSecurityObject.status) return undefined
@@ -135,13 +135,13 @@ export class IssuerAuth extends Sign1 {
 
     const [certificate] = x5chain
 
-    if (trustedRevocationCertificates.length === 0) {
+    if (trustedStatusCertificates.length === 0) {
       throw new TrustedRevocationCertificatesMustContainAtleastOneCertificateError(
-        'Atleast one certificate is required to check the status of the mdoc. Make sure to provide it in the `trustedRevocationCertificates`'
+        'Atleast one certificate is required to check the status of the mdoc. Make sure to provide it in the `trustedStatusCertificates`'
       )
     }
 
-    await ctx.x509.verifyCertificateChain({ trustedCertificates: trustedRevocationCertificates, x5chain })
+    await ctx.x509.verifyCertificateChain({ trustedCertificates: trustedStatusCertificates, x5chain })
 
     const publicKey = await ctx.x509.getPublicKey({ certificate, algorithm })
     const alg = algorithm ?? publicKey.algorithm
@@ -174,7 +174,7 @@ export class IssuerAuth extends Sign1 {
       verificationCallback?: VerificationCallback
       now?: Date
       trustedCertificates?: Array<Uint8Array>
-      trustedRevocationCertificates?: Array<Uint8Array>
+      trustedStatusCertificates?: Array<Uint8Array>
       disableCertificateChainValidation?: boolean
       disableStatusValidation?: boolean
       skewSeconds?: number
@@ -184,9 +184,9 @@ export class IssuerAuth extends Sign1 {
     const verificationCallback = options.verificationCallback ?? defaultVerificationCallback
     const now = options.now ?? new Date()
     const disableCertificateChainValidation = options.disableCertificateChainValidation ?? false
-    const disableRevocationCheck = options.disableStatusValidation ?? false
+    const disableStatusValidation = options.disableStatusValidation ?? false
     const trustedCertificates = options.trustedCertificates ?? []
-    const trustedRevocationCertificates = options.trustedRevocationCertificates ?? []
+    const trustedStatusCertificates = options.trustedStatusCertificates ?? []
     const skewSeconds = options.skewSeconds ?? 30
 
     const onCheck = onCategoryCheck(verificationCallback, 'ISSUER_AUTH')
@@ -221,13 +221,13 @@ export class IssuerAuth extends Sign1 {
       }
     }
 
-    if (!disableRevocationCheck) {
+    if (!disableStatusValidation) {
       try {
         await this.verifyStatus(
           {
             now,
             checkFreshness: true,
-            trustedRevocationCertificates,
+            trustedStatusCertificates,
           },
           ctx
         )
