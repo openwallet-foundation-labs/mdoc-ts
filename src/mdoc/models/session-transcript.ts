@@ -4,6 +4,7 @@ import type { MdocContext } from '../../context'
 import { DeviceEngagement, type DeviceEngagementEncodedStructure } from './device-engagement'
 import { EReaderKey, type EReaderKeyEncodedStructure } from './e-reader-key'
 import { Handover } from './handover'
+import { IsoMdocDcApiHandover, type IsoMdocDcApiHandoverOptions } from './iso-mdoc-dc-api-handover'
 import { NfcHandover } from './nfc-handover'
 import {
   Oid4vpDcApiDraft24HandoverInfo,
@@ -21,6 +22,7 @@ import { QrHandover } from './qr-handover'
 const supportedHandoverStructures = [
   Oid4vpHandover,
   Oid4vpDcApiHandover,
+  IsoMdocDcApiHandover,
   Oid4vpIaeHandover,
   NfcHandover,
   QrHandover,
@@ -161,6 +163,15 @@ export class SessionTranscript extends CborStructure<
     const info = Oid4vpDcApiHandoverInfo.create(options)
     const handover = await Oid4vpDcApiHandover.create({ oid4vpDcApiHandoverInfo: info }, ctx)
 
+    return this.fromDecodedStructure({ deviceEngagement: null, eReaderKey: null, handover })
+  }
+
+  /**
+   * Create a SessionTranscript for the ISO 18013-7 Annex C
+   * `org-iso-mdoc` DC API protocol.
+   */
+  public static async forIsoMdocDcApi(options: IsoMdocDcApiHandoverOptions, ctx: Pick<MdocContext, 'crypto'>) {
+    const handover = await IsoMdocDcApiHandover.create(options, ctx)
     return this.fromDecodedStructure({ deviceEngagement: null, eReaderKey: null, handover })
   }
 
