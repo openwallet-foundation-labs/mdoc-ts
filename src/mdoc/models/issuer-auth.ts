@@ -20,6 +20,7 @@ import {
   InvalidSignatureError,
   JwtNotSupportForStatusListError,
   NoPublicKeySetOnStatusListError,
+  TrustedRevocationCertificatesMustContainAtleastOneCertificateError,
   UnableToExtractX5ChainFromCwtError,
 } from '../errors.js'
 import { MobileSecurityObject, type MobileSecurityObjectEncodedStructure } from './mobile-security-object.js'
@@ -89,7 +90,7 @@ export class IssuerAuth extends Sign1 {
       now = new Date(),
       checkFreshness,
       trustedRevocationCertificates,
-    }: { now?: Date; checkFreshness?: boolean; trustedRevocationCertificates?: Array<Uint8Array> },
+    }: { now?: Date; checkFreshness?: boolean; trustedRevocationCertificates: Array<Uint8Array> },
     ctx: Pick<MdocContext, 'fetch' | 'x509' | 'cose'>
   ) {
     if (!this.mobileSecurityObject.status) return undefined
@@ -134,9 +135,13 @@ export class IssuerAuth extends Sign1 {
 
     const [certificate] = x5chain
 
-    if (trustedRevocationCertificates) {
-      await ctx.x509.verifyCertificateChain({ trustedCertificates: trustedRevocationCertificates, x5chain })
+    if (trustedRevocationCertificates.length === 0) {
+      throw new TrustedRevocationCertificatesMustContainAtleastOneCertificateError(
+        'Atleast one certificate is required to check the status of the mdoc. Make sure to provide it in the `trustedRevocationCertificates`'
+      )
     }
+
+    await ctx.x509.verifyCertificateChain({ trustedCertificates: trustedRevocationCertificates, x5chain })
 
     const publicKey = await ctx.x509.getPublicKey({ certificate, algorithm })
     const alg = algorithm ?? publicKey.algorithm
@@ -181,6 +186,7 @@ export class IssuerAuth extends Sign1 {
     const disableCertificateChainValidation = options.disableCertificateChainValidation ?? false
     const disableRevocationCheck = options.disableStatusValidation ?? false
     const trustedCertificates = options.trustedCertificates ?? []
+    const trustedRevocationCertificates = options.trustedRevocationCertificates ?? []
     const skewSeconds = options.skewSeconds ?? 30
 
     const onCheck = onCategoryCheck(verificationCallback, 'ISSUER_AUTH')
@@ -218,7 +224,11 @@ export class IssuerAuth extends Sign1 {
     if (!disableRevocationCheck) {
       try {
         await this.verifyStatus(
-          { now, checkFreshness: true, trustedRevocationCertificates: options.trustedRevocationCertificates },
+          {
+            now,
+            checkFreshness: true,
+            trustedRevocationCertificates,
+          },
           ctx
         )
       } catch (err) {
