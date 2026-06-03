@@ -16,3 +16,6 @@ export class InvalidMessageAuthenticationCode extends MdlError {}
 export class InvalidSignatureError extends MdlError {}
 export class JwtNotSupportForStatusListError extends MdlError {}
 export class TrustedRevocationCertificatesMustContainAtleastOneCertificateError extends MdlError {}
+export class UnableToExtractX5ChainFromIdentifierListError extends MdlError {}
+export class InvalidIdentifierListSignatureError extends MdlError {}
+export class IdentifierFoundInRevokedListError extends MdlError {}
