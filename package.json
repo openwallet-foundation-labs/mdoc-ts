@@ -30,7 +30,6 @@
     "@owf/cose": "0.3.0-alpha-20260601075923",
     "@owf/identity-common": "0.3.0-alpha-20260601075923",
     "@owf/token-status-list": "0.3.0-alpha-20260601075923",
-    "@peculiar/x509": "^1.14.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -39,6 +38,7 @@
     "@changesets/cli": "^2.30.0",
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
+    "@peculiar/x509": "^1.14.3",
     "@panva/hkdf": "^1.2.1",
     "@types/node": "^25.5.0",
     "jose": "^6.2.2",

@@ -27,7 +27,7 @@ export class Holder {
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>
-  ): Promise<{ issuanceCertificate: Uint8Array; statusCertificate?: Uint8Array }> {
+  ): Promise<{ trustedIssuanceCertificate: Uint8Array; trustedStatusCertificate?: Uint8Array }> {
     const issuerSigned =
       typeof options.issuerSigned === 'string'
         ? IssuerSigned.decode(base64url.decode(options.issuerSigned))
