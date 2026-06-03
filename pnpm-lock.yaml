@@ -17,9 +17,6 @@ importers:
       '@owf/token-status-list':
         specifier: 0.3.0-alpha-20260601075923
         version: 0.3.0-alpha-20260601075923
-      '@peculiar/x509':
-        specifier: ^1.14.3
-        version: 1.14.3
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -39,6 +36,9 @@ importers:
       '@panva/hkdf':
         specifier: ^1.2.1
         version: 1.2.1
+      '@peculiar/x509':
+        specifier: ^1.14.3
+        version: 1.14.3
       '@types/node':
         specifier: ^25.5.0
         version: 25.9.1

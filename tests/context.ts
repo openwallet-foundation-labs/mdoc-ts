@@ -77,11 +77,10 @@ export const mdocContext: MdocContext = {
       if (certificateChain.length === 0) throw new Error('Certificate chain is empty')
 
       const parsedLeafCertificate = new x509.X509Certificate(certificateChain[0])
-      const parsedMdocCertificates = certificateChain.map((c) => new x509.X509Certificate(c))
-      const parsedTrustedCertificates = trustedCertificates.map((c) => new x509.X509Certificate(c))
+      const certificatesToBuildChain = [...certificateChain, ...(trustedCertificates ?? [])].map(
+        (c) => new x509.X509Certificate(c)
+      )
 
-      // Use both trusted and mdoc certificate to build chain
-      const certificatesToBuildChain = [...parsedMdocCertificates, ...parsedTrustedCertificates]
       const certificateChainBuilder = new x509.X509ChainBuilder({
         certificates: certificatesToBuildChain,
       })
@@ -90,7 +89,7 @@ export const mdocContext: MdocContext = {
 
       // The chain is reversed here as the `x5c` header (the expected input),
       // has the leaf certificate as the first entry, while the `x509` library expects this as the last
-      let parsedChain = chain.map((c) => new x509.X509Certificate(c.rawData)).reverse()
+      let parsedChain = chain.reverse()
 
       // We allow longer parsed chain, in case the root cert was not part of the chain, but in the
       // list of trusted certificates
@@ -98,28 +97,62 @@ export const mdocContext: MdocContext = {
         throw new Error('Could not parse the full chain. Likely due to incorrect ordering')
       }
 
-      const trustedCertificateIndex = parsedChain.findIndex((cert) =>
-        parsedTrustedCertificates.some((tCert) => cert.equal(tCert))
-      )
+      let previousCertificate: X509Certificate | undefined
 
-      if (trustedCertificateIndex === -1) {
-        throw new Error('No trusted certificate was found while validating the X.509 chain')
+      if (trustedCertificates) {
+        const parsedTrustedCertificates = trustedCertificates.map(
+          (trustedCertificate) => new X509Certificate(trustedCertificate)
+        )
+
+        const trustedCertificateIndex = parsedChain.findIndex((cert) =>
+          parsedTrustedCertificates.some((tCert) => cert.equal(tCert))
+        )
+
+        if (trustedCertificateIndex === -1) {
+          throw new Error('No trusted certificate was found while validating the X.509 chain')
+        }
+
+        if (trustedCertificateIndex > 0) {
+          // When we trust a certificate other than the first certificate in the provided chain we keep a reference to the
+          // previous certificate as we need the key of this certificate to verify the first certificate in the chain as
+          // it's not self-sigend.
+          previousCertificate = parsedChain[trustedCertificateIndex - 1]
+
+          // Pop everything off before the index of the trusted certificate (those are more root) as it is not relevant for validation
+          parsedChain = parsedChain.slice(trustedCertificateIndex)
+        }
       }
-
-      // FIXME: we should remove this, and update all tests to use root cert for verification
-      // as the 'correct' way to verify is only using the root
-      // Currently if you provide a leaf certificate as trusted entities it will not verify any
-      // certificate, as we don't have the root, and can't verify the leaf without the authority key
-      // so basically it just does an equals match on whether the certificate is equal with a trusted
-      // certificate. But that also means you skip verification of the validity time of the cert
-      parsedChain = parsedChain.slice(0, trustedCertificateIndex)
 
       // Verify the certificate with the publicKey of the certificate above
       for (let i = 0; i < parsedChain.length; i++) {
         const cert = parsedChain[i]
-        const previousCertificate = parsedChain[i - 1]
         const publicKey = previousCertificate ? previousCertificate.publicKey : undefined
-        await cert?.verify({ publicKey, date: input.now ?? new Date() })
+
+        // The only scenario where this will trigger is if the trusted certificates and the x509 chain both do not contain the
+        // intermediate/root certificate needed. E.g. for ISO 18013-5 mDL the root cert MUST NOT be in the chain. If the signer
+        // certificate is then trusted, it will fail, as we can't verify the signer certifciate without having access to the signer
+        // key of the root certificate.
+        // See also https://github.com/openid/OpenID4VCI/issues/62
+        //
+        // In this case we could skip the signature verification (not other verifications), as we already trust the signer certificate,
+        // but i think the purpose of ISO 18013-5 mDL is that you trust the root certificate. If we can't verify the whole chain e.g.
+        // when we receive a credential we have the chance it will fail later on.
+        const skipSignatureVerification = i === 0 && trustedCertificates && !publicKey
+        // NOTE: at some point we might want to change this to throw an error instead of skipping the signature verification of the trusted
+        // but it would basically prevent mDOCs from unknown issuers to be verified in the wallet. Verifiers should only trust the root certificate
+        // anyway.
+        // if (i === 0 && trustedCertificates && cert.issuer !== cert.subject && !publicKey) {
+        //   throw new X509Error(
+        //     'Unable to verify the certificate chain. A non-self-signed certificate is the first certificate in the chain, and no parent certificate was found in the trusted certificates, meaning the first certificate in the chain cannot be verified. Ensure the certificate is added '
+        //   )
+        // }
+
+        if (!skipSignatureVerification) {
+          await cert.verify({
+            publicKey,
+          })
+        }
+        previousCertificate = cert
       }
 
       return { chain: parsedChain.map((cert) => new Uint8Array(cert.rawData)) }

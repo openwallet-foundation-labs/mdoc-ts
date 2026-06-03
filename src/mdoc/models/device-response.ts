@@ -130,7 +130,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>
-  ): Promise<{ issuanceCertificate: Uint8Array; statusCertificate?: Uint8Array } | undefined> {
+  ): Promise<{ trustedIssuanceCertificate: Uint8Array; trustedStatusCertificate?: Uint8Array } | undefined> {
     const onCheck = options.onCheck ?? defaultVerificationCallback
 
     const version = this.structure.get('version')
@@ -147,7 +147,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       category: 'DOCUMENT_FORMAT',
     })
 
-    let usedCertificates: { issuanceCertificate: Uint8Array; statusCertificate?: Uint8Array } | undefined
+    let usedCertificates: { trustedIssuanceCertificate: Uint8Array; trustedStatusCertificate?: Uint8Array } | undefined
     for (const document of documents ?? []) {
       await document.deviceSigned.deviceAuth.verify(
         {

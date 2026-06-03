@@ -10,8 +10,8 @@ import {
   SignatureAlgorithm,
   zUint8Array,
 } from '@owf/cose'
+import { compareBytes } from '@owf/identity-common'
 import { fetchStatusList, StatusListCwt } from '@owf/token-status-list'
-import { X509Certificate } from '@peculiar/x509'
 import z from 'zod'
 import type { MdocContext } from '../../context.js'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback.js'
@@ -187,7 +187,7 @@ export class IssuerAuth extends Sign1 {
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'x509' | 'cose' | 'fetch'>
-  ): Promise<{ issuanceCertificate: Uint8Array; statusCertificate?: Uint8Array }> {
+  ): Promise<{ trustedIssuanceCertificate: Uint8Array; trustedStatusCertificate?: Uint8Array }> {
     const verificationCallback = options.verificationCallback ?? defaultVerificationCallback
     const now = options.now ?? new Date()
     const disableCertificateChainValidation = options.disableCertificateChainValidation ?? false
@@ -202,20 +202,23 @@ export class IssuerAuth extends Sign1 {
       check: "Country name (C) must be present in the issuer certificate's subject distinguished name",
     })
 
-    let chain: Uint8Array[]
+    let trustedStatusCertificates: Uint8Array[] | undefined
     if (!disableCertificateChainValidation) {
       try {
         if (!trustedCertificates || trustedCertificates?.length <= 0) {
           throw new Error('No trusted certificates found. Cannot verify issuer signature.')
         }
 
-        chain = (
-          await ctx.x509.verifyCertificateChain({
-            trustedCertificates: trustedCertificates.flatMap(({ issuance }) => issuance),
-            x5chain: this.certificateChain,
-            now,
-          })
-        ).chain
+        const { chain } = await ctx.x509.verifyCertificateChain({
+          trustedCertificates: trustedCertificates.flatMap(({ issuance }) => issuance),
+          x5chain: this.certificateChain,
+          now,
+        })
+
+        trustedStatusCertificates = chain[chain.length - 1]
+          ? trustedCertificates.find((tc) => tc.issuance.map((cert) => compareBytes(cert, chain[chain.length - 1])))
+              ?.status
+          : undefined
 
         onCheck({
           status: 'PASSED',
@@ -230,13 +233,10 @@ export class IssuerAuth extends Sign1 {
       }
     }
 
-    let statusCertificate: Uint8Array | undefined
+    let trustedStatusCertificate: Uint8Array | undefined
     if (!disableStatusValidation) {
       try {
-        const trustedStatusCertificates = trustedCertificates.find((tc) =>
-          tc.issuance.map((cert) => new X509Certificate(cert).equal(chain[chain.length - 1]))
-        )?.status
-        statusCertificate = await this.verifyStatus(
+        trustedStatusCertificate = await this.verifyStatus(
           {
             now,
             checkFreshness: true,
@@ -247,14 +247,14 @@ export class IssuerAuth extends Sign1 {
       } catch (err) {
         onCheck({
           status: 'FAILED',
-          check: 'Revocation information must be valid',
+          check: 'Status information must be valid',
           reason: err instanceof Error ? err.message : 'Unknown error',
         })
       }
     }
 
     const publicKey = await ctx.x509.getPublicKey({ certificate: this.certificate, algorithm: this.algorithm })
-    const isSignatureValid = await this.verifySignature({ key: publicKey }, { verify: ctx.cose.sign1.verify })
+    const isSignatureValid = await this.verifySignature({ key: publicKey }, ctx.cose.sign1)
 
     onCheck({
       status: isSignatureValid ? 'PASSED' : 'FAILED',
@@ -282,6 +282,6 @@ export class IssuerAuth extends Sign1 {
       reason: `The MSO must be valid at the time of verification (${now.toUTCString()})`,
     })
 
-    return { issuanceCertificate: this.certificate, statusCertificate }
+    return { trustedIssuanceCertificate: this.certificate, trustedStatusCertificate }
   }
 }
