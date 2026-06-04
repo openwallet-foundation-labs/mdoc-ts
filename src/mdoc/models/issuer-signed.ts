@@ -85,7 +85,7 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'x509' | 'crypto' | 'cose' | 'fetch'>
-  ): Promise<{ trustedIssuanceCertificate: Uint8Array; trustedStatusCertificate?: Uint8Array }> {
+  ): Promise<{ trustedIssuanceCertificate: Uint8Array }> {
     const { valueDigests, digestAlgorithm } = this.issuerAuth.mobileSecurityObject
 
     const onCheck = onCategoryCheck(options.verificationCallback ?? defaultVerificationCallback, 'DATA_INTEGRITY')
@@ -96,7 +96,7 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
     })
 
     // Verify the issuer auth
-    const { trustedIssuanceCertificate, trustedStatusCertificate } = await this.issuerAuth.verify(options, ctx)
+    const { trustedIssuanceCertificate } = await this.issuerAuth.verify(options, ctx)
 
     const namespaces = this.issuerNamespaces?.issuerNamespaces ?? new Map<string, IssuerSignedItem[]>()
 
@@ -171,7 +171,7 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
       })
     )
 
-    return { trustedIssuanceCertificate, trustedStatusCertificate }
+    return { trustedIssuanceCertificate }
   }
 
   public static create(options: IssuerSignedOptions): IssuerSigned {
