@@ -241,9 +241,10 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
           deviceNamespaces,
         }).encode({ asDataItem: true })
 
-        const unprotectedHeaders = UnprotectedHeaders.create({
-          unprotectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.KeyId, signingKey.keyId]]),
-        })
+        const unprotectedHeaders = UnprotectedHeaders.create({})
+        if (signingKey.keyId) {
+          unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, signingKey.keyId)
+        }
 
         const protectedHeaders = ProtectedHeaders.create({
           protectedHeaders: new Map([[RegisteredCwtHeaderClaimKey.Algorithm, signingKey.algorithm]]),
