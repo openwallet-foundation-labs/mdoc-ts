@@ -7,7 +7,7 @@ import {
   typedMap,
   UnprotectedHeaders,
 } from '@owf/cose'
-import { base64url } from '@owf/identity-common'
+import { base64url, stringToBytes } from '@owf/identity-common'
 import { z } from 'zod'
 import type { MdocContext } from '../../context'
 import { findIssuerSigned } from '../../utils/findIssuerSigned'
@@ -243,7 +243,9 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
 
         const unprotectedHeaders = UnprotectedHeaders.create({})
         if (signingKey.keyId) {
-          unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, signingKey.keyId)
+          // COSE label 4 (kid) is a bstr per RFC 8152; UTF-8 encode
+          // the text form at the header boundary.
+          unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, stringToBytes(signingKey.keyId))
         }
 
         const protectedHeaders = ProtectedHeaders.create({
