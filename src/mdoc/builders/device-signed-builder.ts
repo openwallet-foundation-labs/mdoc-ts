@@ -60,7 +60,9 @@ export class DeviceSignedBuilder {
     })
 
     if (options.signingKey.keyId) {
-      unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.signingKey.keyId)
+      // COSE label 4 (kid) is a bstr per RFC 8152; UTF-8 encode the
+      // text form at the header boundary.
+      unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, stringToBytes(options.signingKey.keyId))
     }
 
     const deviceAuthentication = DeviceAuthentication.create({
@@ -107,7 +109,9 @@ export class DeviceSignedBuilder {
     })
 
     if (options.privateKey.keyId) {
-      protectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.privateKey.keyId)
+      // COSE label 4 (kid) is a bstr per RFC 8152; UTF-8 encode the
+      // text form at the header boundary.
+      protectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, stringToBytes(options.privateKey.keyId))
     }
 
     const deviceAuthentication = DeviceAuthentication.create({

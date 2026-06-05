@@ -6,6 +6,7 @@ import {
   type SignatureAlgorithm,
   UnprotectedHeaders,
 } from '@owf/cose'
+import { stringToBytes } from '@owf/identity-common'
 import type { MdocContext } from '../../context'
 import { randomUnsignedInteger } from '../../utils/randomUnsignedInteger'
 import { AtLeastOneCertificateRequiredError, SignatureAlgorithmDoesNotMatchSigningKeyAlgorithmError } from '../errors'
@@ -139,7 +140,9 @@ export class IssuerSignedBuilder {
     })
 
     if (options.signingKey.keyId) {
-      unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, options.signingKey.keyId)
+      // COSE label 4 (kid) is a bstr per RFC 8152; CoseKey.keyId is the
+      // text form, so we UTF-8 encode here at the header boundary.
+      unprotectedHeaders.headers?.set(RegisteredCwtHeaderClaimKey.KeyId, stringToBytes(options.signingKey.keyId))
     }
 
     const issuerAuth = await IssuerAuth.create({

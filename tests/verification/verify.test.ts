@@ -339,7 +339,7 @@ suite('Verification', () => {
       payload: { statusList, subject: uri },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
-          [RegisteredCwtHeaderClaimKey.X5Chain, [new X509Certificate(ISSUER_CERTIFICATE).rawData]],
+          [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
           [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
         ]),
       }),
@@ -449,7 +449,7 @@ suite('Verification', () => {
       payload: { statusList, subject: uri },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
-          [RegisteredCwtHeaderClaimKey.X5Chain, [new X509Certificate(ISSUER_CERTIFICATE).rawData]],
+          [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
           [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
         ]),
       }),
@@ -559,7 +559,7 @@ suite('Verification', () => {
       payload: { statusList, subject: uri },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
-          [RegisteredCwtHeaderClaimKey.X5Chain, [new X509Certificate(ISSUER_CERTIFICATE).rawData]],
+          [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
           [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
         ]),
       }),
@@ -615,7 +615,7 @@ suite('Verification', () => {
       payload: { statusList, subject: uri },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
-          [RegisteredCwtHeaderClaimKey.X5Chain, [new X509Certificate(ISSUER_CERTIFICATE).rawData]],
+          [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
           [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
         ]),
       }),
@@ -673,7 +673,7 @@ suite('Verification', () => {
       payload: { statusList, subject: uri },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
-          [RegisteredCwtHeaderClaimKey.X5Chain, [new X509Certificate(ISSUER_CERTIFICATE).rawData]],
+          [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
           [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
         ]),
       }),
@@ -733,7 +733,7 @@ suite('Verification', () => {
       payload: { statusList, subject: uri },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
-          [RegisteredCwtHeaderClaimKey.X5Chain, [new X509Certificate(ISSUER_CERTIFICATE).rawData]],
+          [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
           [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
         ]),
       }),
@@ -792,7 +792,7 @@ suite('Verification', () => {
       payload: { statusList, subject: uri },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
-          [RegisteredCwtHeaderClaimKey.X5Chain, [new X509Certificate(ISSUER_CERTIFICATE).rawData]],
+          [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
           [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
         ]),
       }),
