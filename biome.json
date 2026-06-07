@@ -94,6 +94,19 @@
       "linter": {
         "enabled": false
       }
+    },
+    {
+      "includes": ["vitest.config.ts"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUndeclaredDependencies": {
+              "level": "error",
+              "options": { "devDependencies": true }
+            }
+          }
+        }
+      }
     }
   ]
 }
