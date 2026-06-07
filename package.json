@@ -2,7 +2,7 @@
   "name": "@owf/mdoc",
   "description": "ISO 18013-5 Mdoc and MDL",
   "license": "Apache-2.0",
-  "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd",
+  "packageManager": "pnpm@11.5.2+sha512.71c631e382066efc25625d5cf029075de07b61b37f6e27350fbd84b1bda5864c8c1967adc280776b45c30a715c0359a3be08fef42d5bb09e2b99029979692916",
   "author": "Animo Solutions",
   "exports": "./src/index.ts",
   "version": "0.6.0",
@@ -26,6 +26,9 @@
     "release": "pnpm build && pnpm changeset publish --no-git-tag",
     "changeset-version": "pnpm changeset version && pnpm style:fix"
   },
+  "engines": {
+    "node": ">=20.19"
+  },
   "dependencies": {
     "@owf/cose": "0.3.0-alpha-20260605053037",
     "@owf/identity-common": "0.3.0-alpha-20260605053037",
@@ -34,17 +37,17 @@
   },
   "devDependencies": {
     "nock": "^14.0.15",
-    "@biomejs/biome": "2.4.9",
+    "@biomejs/biome": "2.4.16",
     "@changesets/cli": "^2.30.0",
-    "@noble/curves": "^2.0.1",
-    "@noble/hashes": "^2.0.1",
+    "@noble/curves": "^2.2.0",
+    "@noble/hashes": "^2.2.0",
     "@peculiar/x509": "^1.14.3",
     "@panva/hkdf": "^1.2.1",
     "@types/node": "^25.5.0",
     "jose": "^6.2.2",
-    "tsdown": "^0.21.5",
-    "typescript": "~5.9.3",
-    "vitest": "^4.1.1"
+    "tsdown": "^0.22.2",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8"
   },
   "repository": {
     "type": "git",
