@@ -36,15 +36,16 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "nock": "^14.0.15",
     "@biomejs/biome": "2.4.16",
     "@changesets/cli": "^2.30.0",
     "@noble/curves": "^2.2.0",
     "@noble/hashes": "^2.2.0",
-    "@peculiar/x509": "^1.14.3",
     "@panva/hkdf": "^1.2.1",
+    "@peculiar/x509": "^2.0.0",
     "@types/node": "^25.5.0",
     "jose": "^6.2.2",
+    "nock": "^14.0.15",
+    "reflect-metadata": "^0.2.2",
     "tsdown": "^0.22.2",
     "typescript": "~6.0.3",
     "vitest": "^4.1.8"
