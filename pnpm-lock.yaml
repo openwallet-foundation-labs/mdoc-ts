@@ -12,8 +12,8 @@ importers:
         specifier: 0.3.0-alpha-20260605053037
         version: 0.3.0-alpha-20260605053037
       '@owf/identity-common':
-        specifier: 0.3.0-alpha-20260605053037
-        version: 0.3.0-alpha-20260605053037
+        specifier: 0.3.0-alpha-20260608062226
+        version: 0.3.0-alpha-20260608062226
       '@owf/token-status-list':
         specifier: 0.3.0-alpha-20260605053037
         version: 0.3.0-alpha-20260605053037
@@ -484,6 +484,9 @@ packages:
 
   '@owf/identity-common@0.3.0-alpha-20260605053037':
     resolution: {integrity: sha512-Eh4AUhJHXptgWdV9sQjd1Ob3m2geoKDltfdHiY4I9w6u7UkUPyjtQjSpRrVhHoo7KQeQ7mGI3qrOpqj91zNUjA==}
+
+  '@owf/identity-common@0.3.0-alpha-20260608062226':
+    resolution: {integrity: sha512-7t/liuK6m9DnFLZcqxhL3xmprRFIWxmJ6wmhnWXhcK8FtXLEwH5dBgpsw4xVx39e9jBCWVgUhUk5dMMxqJ8F+w==}
 
   '@owf/token-status-list@0.3.0-alpha-20260605053037':
     resolution: {integrity: sha512-dAHmkhzwHDp2mFA7u02fp2ERuxihKGYgIXCOqoVwlgHekQq3Y+Vd9RPlXMaHaj03q1fhriTrBZmpyMdP+DKGmw==}
@@ -2036,6 +2039,8 @@ snapshots:
       zod-validation-error: 5.0.0(zod@4.4.3)
 
   '@owf/identity-common@0.3.0-alpha-20260605053037': {}
+
+  '@owf/identity-common@0.3.0-alpha-20260608062226': {}
 
   '@owf/token-status-list@0.3.0-alpha-20260605053037':
     dependencies:
