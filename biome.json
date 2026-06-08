@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.9/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
   "files": {
     "maxSize": 10000000
   },
@@ -93,6 +93,19 @@
       "includes": ["**/*.js"],
       "linter": {
         "enabled": false
+      }
+    },
+    {
+      "includes": ["vitest.config.ts"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUndeclaredDependencies": {
+              "level": "error",
+              "options": { "devDependencies": true }
+            }
+          }
+        }
       }
     }
   ]
