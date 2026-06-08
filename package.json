@@ -32,7 +32,7 @@
   "dependencies": {
     "@owf/cose": "0.3.0-alpha-20260605053037",
     "@owf/identity-common": "0.3.0-alpha-20260605053037",
-    "@owf/token-status-list": "0.3.0-alpha-20260605053037",
+    "@owf/token-status-list": "0.3.0-alpha-20260608062226",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -15,8 +15,8 @@ importers:
         specifier: 0.3.0-alpha-20260605053037
         version: 0.3.0-alpha-20260605053037
       '@owf/token-status-list':
-        specifier: 0.3.0-alpha-20260605053037
-        version: 0.3.0-alpha-20260605053037
+        specifier: 0.3.0-alpha-20260608062226
+        version: 0.3.0-alpha-20260608062226
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -482,11 +482,17 @@ packages:
   '@owf/cose@0.3.0-alpha-20260605053037':
     resolution: {integrity: sha512-kagiAfAEqykFGNYjUdXkhRVVJSVQ16vGwbGxHMeh0kCJzAJg+TXrPF7DvLImLw7mAp5Ha7f3+Pgza1TRk3TeYw==}
 
+  '@owf/cose@0.3.0-alpha-20260608062226':
+    resolution: {integrity: sha512-Dp11utctXef7yuEHDaodhjNsju022jJnTXw+KRi+HpSWFiq1vlZY8duQLPsIKHHEQ+ZCxfRB2B413D/S78IhaQ==}
+
   '@owf/identity-common@0.3.0-alpha-20260605053037':
     resolution: {integrity: sha512-Eh4AUhJHXptgWdV9sQjd1Ob3m2geoKDltfdHiY4I9w6u7UkUPyjtQjSpRrVhHoo7KQeQ7mGI3qrOpqj91zNUjA==}
 
-  '@owf/token-status-list@0.3.0-alpha-20260605053037':
-    resolution: {integrity: sha512-dAHmkhzwHDp2mFA7u02fp2ERuxihKGYgIXCOqoVwlgHekQq3Y+Vd9RPlXMaHaj03q1fhriTrBZmpyMdP+DKGmw==}
+  '@owf/identity-common@0.3.0-alpha-20260608062226':
+    resolution: {integrity: sha512-7t/liuK6m9DnFLZcqxhL3xmprRFIWxmJ6wmhnWXhcK8FtXLEwH5dBgpsw4xVx39e9jBCWVgUhUk5dMMxqJ8F+w==}
+
+  '@owf/token-status-list@0.3.0-alpha-20260608062226':
+    resolution: {integrity: sha512-OIN6GUYkM930vufB3fQOwtbOONAG492aqvHAvxxTNlxtkTkmoTfTj/kh7jSEvCD9TZLYf8c5GEKn/BND/Iee0g==}
 
   '@oxc-project/types@0.127.0':
     resolution: {integrity: sha512-aIYXQBo4lCbO4z0R3FHeucQHpF46l2LbMdxRvqvuRuW2OxdnSkcng5B8+K12spgLDj93rtN3+J2Vac/TIO+ciQ==}
@@ -2035,12 +2041,21 @@ snapshots:
       zod: 4.4.3
       zod-validation-error: 5.0.0(zod@4.4.3)
 
+  '@owf/cose@0.3.0-alpha-20260608062226':
+    dependencies:
+      '@owf/identity-common': 0.3.0-alpha-20260608062226
+      cbor-x: 1.6.4
+      zod: 4.4.3
+      zod-validation-error: 5.0.0(zod@4.4.3)
+
   '@owf/identity-common@0.3.0-alpha-20260605053037': {}
 
-  '@owf/token-status-list@0.3.0-alpha-20260605053037':
+  '@owf/identity-common@0.3.0-alpha-20260608062226': {}
+
+  '@owf/token-status-list@0.3.0-alpha-20260608062226':
     dependencies:
-      '@owf/cose': 0.3.0-alpha-20260605053037
-      '@owf/identity-common': 0.3.0-alpha-20260605053037
+      '@owf/cose': 0.3.0-alpha-20260608062226
+      '@owf/identity-common': 0.3.0-alpha-20260608062226
       cbor-x: 1.6.4
       pako: 2.1.0
       zod: 4.4.3
