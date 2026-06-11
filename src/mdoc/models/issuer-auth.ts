@@ -255,7 +255,7 @@ export class IssuerAuth extends Sign1 {
         })
 
         trustedStatusCertificates = chain[chain.length - 1]
-          ? trustedCertificates.find((tc) => tc.issuance.map((cert) => compareBytes(cert, chain[chain.length - 1])))
+          ? trustedCertificates.find((tc) => tc.issuance.some((cert) => compareBytes(cert, chain[chain.length - 1])))
               ?.status
           : undefined
 
