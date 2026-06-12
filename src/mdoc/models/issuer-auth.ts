@@ -103,16 +103,18 @@ export class IssuerAuth extends Sign1 {
       trustedStatusCertificates?: Uint8Array[]
     },
     ctx: Pick<MdocContext, 'fetch' | 'x509' | 'cose'>
-  ): Promise<undefined | StatusListCwt | IdentifierListCwt> {
+  ): Promise<{ statusList?: StatusListCwt; trustedStatusListChain?: Uint8Array[]; identifierList?: IdentifierListCwt; trustedIdentifierListChain?: Uint8Array[] }> {
     const status = this.mobileSecurityObject.status
-    if (!status) return
-    if (!status.statusList && !status.identifierList) return
+    if (!status || (!status.statusList && !status.identifierList)) return {}
 
     if (!trustedStatusCertificates || trustedStatusCertificates.length <= 0) {
       throw new TrustedRevocationCertificatesMustContainAtleastOneCertificateError(
         'Atleast one certificate is required to check the status of the mdoc. Make sure to supply them in the `trustedStatusCertificates` option'
       )
     }
+
+    let statusList: StatusListCwt | undefined
+    let trustedStatusListChain: Uint8Array[] | undefined
 
     if (status.statusList) {
       const { uri, idx } = status.statusList
@@ -151,7 +153,7 @@ export class IssuerAuth extends Sign1 {
 
       const [certificate] = x5chain
 
-      await ctx.x509.verifyCertificateChain({
+      const { chain: statusChain } = await ctx.x509.verifyCertificateChain({
         trustedCertificates: trustedStatusCertificates,
         x5chain,
       })
@@ -178,8 +180,12 @@ export class IssuerAuth extends Sign1 {
       }
 
       cwt.verifyStatus({ uri, idx, now, checkFreshness })
-      return cwt
+      statusList = cwt
+      trustedStatusListChain = statusChain
     }
+
+    let identifierList: IdentifierListCwt | undefined
+    let trustedIdentifierListChain: Uint8Array[] | undefined
 
     if (status.identifierList) {
       // ISO/IEC 18013-5 second edition § 12.3.6.4 (identifier list).
@@ -197,7 +203,7 @@ export class IssuerAuth extends Sign1 {
       // Identifier-list CWTs MUST carry an x5chain in the protected
       // header (§ 12.3.6.3); the chain anchors back to a trusted
       // status-cert root so the caller can vet the issuer.
-      await ctx.x509.verifyCertificateChain({
+      const { chain: identifierChain } = await ctx.x509.verifyCertificateChain({
         trustedCertificates: trustedStatusCertificates,
         x5chain,
       })
@@ -215,8 +221,11 @@ export class IssuerAuth extends Sign1 {
         throw new IdentifierFoundInRevokedListError(`Identifier ${hex} found in revoked list at ${uri}`)
       }
 
-      return cwt
+      identifierList = cwt
+      trustedIdentifierListChain = identifierChain
     }
+
+    return { statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain }
   }
 
   public async verify(
@@ -229,7 +238,7 @@ export class IssuerAuth extends Sign1 {
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'x509' | 'cose' | 'fetch'>
-  ): Promise<{ trustedIssuanceCain: Uint8Array; statusOrIdentifierList?: StatusListCwt | IdentifierListCwt }> {
+  ): Promise<{ trustedIssuanceChain: Uint8Array[]; statusList?: StatusListCwt; trustedStatusListChain?: Uint8Array[]; identifierList?: IdentifierListCwt; trustedIdentifierListChain?: Uint8Array[] }> {
     const verificationCallback = options.verificationCallback ?? defaultVerificationCallback
     const now = options.now ?? new Date()
     const disableCertificateChainValidation = options.disableCertificateChainValidation ?? false
@@ -245,7 +254,7 @@ export class IssuerAuth extends Sign1 {
     })
 
     let trustedStatusCertificates: Uint8Array[] | undefined
-    let trustedIssuanceCertificates: Uint8Array[] | undefined
+    let trustedIssuanceChain: Uint8Array[] | undefined
     if (!disableCertificateChainValidation) {
       try {
         if (!trustedCertificates || trustedCertificates?.length <= 0) {
@@ -258,7 +267,7 @@ export class IssuerAuth extends Sign1 {
           now,
         })
 
-        trustedIssuanceCertificates = chain
+        trustedIssuanceChain = chain
         trustedStatusCertificates = chain[chain.length - 1]
           ? trustedCertificates.find((tc) => tc.issuance.some((cert) => compareBytes(cert, chain[chain.length - 1])))
               ?.status
@@ -277,17 +286,20 @@ export class IssuerAuth extends Sign1 {
       }
     }
 
-    let statusOrIdentifierList: StatusListCwt | IdentifierListCwt | undefined
+    let statusList: StatusListCwt | undefined
+    let trustedStatusListChain: Uint8Array[] | undefined
+    let identifierList: IdentifierListCwt | undefined
+    let trustedIdentifierListChain: Uint8Array[] | undefined
     if (!disableStatusValidation) {
       try {
-        statusOrIdentifierList = await this.verifyStatus(
+        ;({ statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain } = await this.verifyStatus(
           {
             now,
             checkFreshness: true,
             trustedStatusCertificates,
           },
           ctx
-        )
+        ))
       } catch (err) {
         onCheck({
           status: 'FAILED',
@@ -326,6 +338,12 @@ export class IssuerAuth extends Sign1 {
       reason: `The MSO must be valid at the time of verification (${now.toUTCString()})`,
     })
 
-    return { trustedIssuanceCain: this.certificate, statusOrIdentifierList }
+    onCheck({
+      status: trustedIssuanceChain ? 'PASSED' : 'FAILED',
+      check: 'Unable to determine a trusted issuance chain for the provided trusted certificates and the signer of the issuer auth',
+      reason: `Unable to determine a trusted issuance chain for the provided trusted certificates and the signer of the issuer auth`,
+    })
+
+    return { trustedIssuanceChain: trustedIssuanceChain as Uint8Array[], statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain }
   }
 }
