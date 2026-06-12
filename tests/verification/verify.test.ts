@@ -140,7 +140,7 @@ suite('Verification', () => {
 
     const decodedDeviceResponse = DeviceResponse.fromEncodedForOid4Vp(encodedDeviceResponse)
 
-    await Verifier.verifyDeviceResponse(
+    const result = await Verifier.verifyDeviceResponse(
       {
         deviceRequest,
         deviceResponse: decodedDeviceResponse,
@@ -149,6 +149,16 @@ suite('Verification', () => {
       },
       mdocContext
     )
+
+    expect(result).toHaveLength(1)
+    const [{ document, trustedIssuanceChain, statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain }] = result
+    expect(document).toBeDefined()
+    expect(trustedIssuanceChain).toHaveLength(1)
+    expect(trustedIssuanceChain[0]).toEqual(new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData))
+    expect(statusList).toBeUndefined()
+    expect(trustedStatusListChain).toBeUndefined()
+    expect(identifierList).toBeUndefined()
+    expect(trustedIdentifierListChain).toBeUndefined()
   })
 
   test('Verify mdoc with selective disclosure', async () => {
@@ -241,7 +251,7 @@ suite('Verification', () => {
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
   })
 
   test('Verify with custom session transcript', async () => {
@@ -328,7 +338,7 @@ suite('Verification', () => {
         },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
   })
 
   test('Verify mdoc with status status_list check', async () => {
@@ -430,7 +440,7 @@ suite('Verification', () => {
 
     const decodedDeviceResponse = DeviceResponse.fromEncodedForOid4Vp(encodedDeviceResponse)
 
-    await Verifier.verifyDeviceResponse(
+    const result = await Verifier.verifyDeviceResponse(
       {
         deviceRequest,
         deviceResponse: decodedDeviceResponse,
@@ -439,6 +449,16 @@ suite('Verification', () => {
       },
       mdocContext
     )
+
+    expect(result).toHaveLength(1)
+    const [{ document, trustedIssuanceChain, statusList: resultStatusList, trustedStatusListChain, identifierList, trustedIdentifierListChain }] = result
+    expect(document).toBeDefined()
+    expect(trustedIssuanceChain).toHaveLength(1)
+    expect(trustedIssuanceChain[0]).toEqual(new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData))
+    expect(trustedStatusListChain?.[0]).toEqual(new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData))
+    expect(resultStatusList).toBeDefined()
+    expect(identifierList).toBeUndefined()
+    expect(trustedIdentifierListChain).toBeUndefined()
   })
 
   test('Verify mdoc with status status_list check with trusted certificates', async () => {

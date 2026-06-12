@@ -93,6 +93,6 @@ suite('deviceSignature kid header', () => {
         { deviceRequest, deviceResponse: decoded, sessionTranscript, trustedCertificates },
         mdocContext
       )
-    ).resolves.toBeUndefined()
+    ).resolves.toBeDefined()
   })
 })

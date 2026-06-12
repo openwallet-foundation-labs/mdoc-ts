@@ -132,7 +132,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>
-  ): Promise<{ trustedIssuanceCertificate: Uint8Array } | undefined> {
+  ): Promise<Array<{ document: Document; trustedIssuanceChain: Uint8Array[]; statusOrIdentifierList?: StatusListCwt | IdentifierListCwt }>> {
     const onCheck = options.onCheck ?? defaultVerificationCallback
 
     const version = this.structure.get('version')
@@ -149,7 +149,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       category: 'DOCUMENT_FORMAT',
     })
 
-    let ret: Array<{trustedIssuanceChain: Uint8Array[], statusOrIdentifierList?: StatusListCwt | IdentifierListCwt, document: Document}> = []
+    let ret: Array<{ trustedIssuanceChain: Uint8Array[]; statusList?: StatusListCwt; trustedStatusListChain?: Uint8Array[]; identifierList?: IdentifierListCwt; trustedIdentifierListChain?: Uint8Array[]; document: Document }> = []
     for (const document of documents ?? []) {
       await document.deviceSigned.deviceAuth.verify(
         {
@@ -161,7 +161,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
         ctx
       )
 
-      const {statusOrIdentifierList,trustedIssuanceChain } = = await document.issuerSigned.verify(
+      const { trustedIssuanceChain, statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain } = await document.issuerSigned.verify(
         {
           verificationCallback: onCheck,
           disableCertificateChainValidation: options.disableCertificateChainValidation,
@@ -172,7 +172,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
         },
         ctx
       )
-      ret.push({statusOrIdentifierList,document,trustedIssuanceChain})
+      ret.push({ trustedIssuanceChain, statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain, document })
     }
 
     if (options.deviceRequest?.docRequests && documents) {
@@ -195,7 +195,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       }
     }
 
-    return usedCertificates
+    return ret
   }
 
   public get encodedForOid4Vp() {
