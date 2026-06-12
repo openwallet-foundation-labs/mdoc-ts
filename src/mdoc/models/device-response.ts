@@ -24,10 +24,9 @@ import { DeviceSignature } from './device-signature'
 import { DeviceSigned } from './device-signed'
 import { Document, type DocumentEncodedStructure } from './document'
 import { DocumentError, type DocumentErrorStructure } from './document-error'
+import type { IssuerAuthVerificationResult } from './issuer-auth'
 import { IssuerSigned } from './issuer-signed'
 import type { SessionTranscript } from './session-transcript'
-import { StatusListCwt } from '@owf/token-status-list'
-import { IdentifierListCwt } from './identifier-list-cwt'
 
 const deviceResponseEncodedSchema = typedMap([
   ['version', z.string()],
@@ -52,6 +51,8 @@ export type DeviceResponseOptions = {
   documentErrors?: Array<DocumentError>
   status?: number
 }
+
+export type DeviceResponseVerificationResult = Array<IssuerAuthVerificationResult & { document: Document }>
 
 export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure, DeviceResponseDecodedStructure> {
   public static override get encodingSchema() {
@@ -132,7 +133,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>
-  ): Promise<Array<{ document: Document; trustedIssuanceChain: Uint8Array[]; statusOrIdentifierList?: StatusListCwt | IdentifierListCwt }>> {
+  ): Promise<DeviceResponseVerificationResult> {
     const onCheck = options.onCheck ?? defaultVerificationCallback
 
     const version = this.structure.get('version')
@@ -149,7 +150,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       category: 'DOCUMENT_FORMAT',
     })
 
-    let ret: Array<{ trustedIssuanceChain: Uint8Array[]; statusList?: StatusListCwt; trustedStatusListChain?: Uint8Array[]; identifierList?: IdentifierListCwt; trustedIdentifierListChain?: Uint8Array[]; document: Document }> = []
+    const returnValue: DeviceResponseVerificationResult = []
     for (const document of documents ?? []) {
       await document.deviceSigned.deviceAuth.verify(
         {
@@ -161,18 +162,26 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
         ctx
       )
 
-      const { trustedIssuanceChain, statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain } = await document.issuerSigned.verify(
-        {
-          verificationCallback: onCheck,
-          disableCertificateChainValidation: options.disableCertificateChainValidation,
-          now: options.now,
-          trustedCertificates: options.trustedCertificates,
-          skewSeconds: options.skewSeconds,
-          disableStatusValidation: options.disableStatusValidation,
-        },
-        ctx
-      )
-      ret.push({ trustedIssuanceChain, statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain, document })
+      const { trustedIssuanceChain, statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain } =
+        await document.issuerSigned.verify(
+          {
+            verificationCallback: onCheck,
+            disableCertificateChainValidation: options.disableCertificateChainValidation,
+            now: options.now,
+            trustedCertificates: options.trustedCertificates,
+            skewSeconds: options.skewSeconds,
+            disableStatusValidation: options.disableStatusValidation,
+          },
+          ctx
+        )
+      returnValue.push({
+        trustedIssuanceChain,
+        statusList,
+        trustedStatusListChain,
+        identifierList,
+        trustedIdentifierListChain,
+        document,
+      })
     }
 
     if (options.deviceRequest?.docRequests && documents) {
@@ -195,7 +204,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       }
     }
 
-    return ret
+    return returnValue
   }
 
   public get encodedForOid4Vp() {

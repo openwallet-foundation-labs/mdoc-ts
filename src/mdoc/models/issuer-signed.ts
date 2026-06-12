@@ -3,12 +3,10 @@ import { base64url } from '@owf/identity-common'
 import { z } from 'zod'
 import type { MdocContext } from '../../context'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback'
-import { IssuerAuth, type IssuerAuthEncodedStructure } from './issuer-auth'
+import { IssuerAuth, type IssuerAuthEncodedStructure, type IssuerAuthVerificationResult } from './issuer-auth'
 import { IssuerNamespaces, type IssuerNamespacesEncodedStructure } from './issuer-namespaces'
 import type { IssuerSignedItem } from './issuer-signed-item'
 import type { Namespace } from './namespace'
-import { StatusListCwt } from '@owf/token-status-list'
-import { IdentifierListCwt } from './identifier-list-cwt'
 
 const issuerSignedSchema = typedMap([
   ['nameSpaces', z.instanceof(IssuerNamespaces)],
@@ -22,6 +20,8 @@ export type IssuerSignedOptions = {
   issuerNamespaces?: IssuerNamespaces
   issuerAuth: IssuerAuth
 }
+
+export type IssuerSignedVerificationResult = IssuerAuthVerificationResult
 
 export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, IssuerSignedDecodedStructure> {
   public static override get encodingSchema() {
@@ -87,7 +87,7 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'x509' | 'crypto' | 'cose' | 'fetch'>
-  ): Promise<{ trustedIssuanceChain: Uint8Array[]; statusList?: StatusListCwt; trustedStatusListChain?: Uint8Array[]; identifierList?: IdentifierListCwt; trustedIdentifierListChain?: Uint8Array[] }> {
+  ): Promise<IssuerSignedVerificationResult> {
     const { valueDigests, digestAlgorithm } = this.issuerAuth.mobileSecurityObject
 
     const onCheck = onCategoryCheck(options.verificationCallback ?? defaultVerificationCallback, 'DATA_INTEGRITY')
@@ -98,7 +98,8 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
     })
 
     // Verify the issuer auth
-    const { trustedIssuanceChain, statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain } = await this.issuerAuth.verify(options, ctx)
+    const { trustedIssuanceChain, statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain } =
+      await this.issuerAuth.verify(options, ctx)
 
     const namespaces = this.issuerNamespaces?.issuerNamespaces ?? new Map<string, IssuerSignedItem[]>()
 

@@ -1,10 +1,12 @@
 import type { CoseKey } from '@owf/cose'
-import { StatusListCwt } from '@owf/token-status-list'
 import type { MdocContext } from './context.js'
 import type { VerificationCallback } from './mdoc/check-callback.js'
-import { type DeviceRequest, DeviceResponse, type SessionTranscript } from './mdoc/index.js'
-import type { Document } from './mdoc/models/document.js'
-import type { IdentifierListCwt } from './mdoc/models/identifier-list-cwt.js'
+import {
+  type DeviceRequest,
+  DeviceResponse,
+  type DeviceResponseVerificationResult,
+  type SessionTranscript,
+} from './mdoc/index.js'
 
 export class Verifier {
   public static async verifyDeviceResponse(
@@ -21,7 +23,7 @@ export class Verifier {
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>
-  ): Promise<Array<{ document: Document; trustedIssuanceChain: Uint8Array[]; statusList?: StatusListCwt; trustedStatusListChain?: Uint8Array[]; identifierList?: IdentifierListCwt; trustedIdentifierListChain?: Uint8Array[] }>> {
+  ): Promise<DeviceResponseVerificationResult> {
     const deviceResponse =
       options.deviceResponse instanceof DeviceResponse
         ? options.deviceResponse

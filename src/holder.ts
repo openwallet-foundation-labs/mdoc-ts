@@ -1,16 +1,15 @@
 import type { CoseKey } from '@owf/cose'
 import { base64url } from '@owf/identity-common'
-import { StatusListCwt } from '@owf/token-status-list'
 import type { MdocContext } from './context'
 import {
   type DeviceNamespaces,
   DeviceRequest,
   DeviceResponse,
   IssuerSigned,
+  type IssuerSignedVerificationResult,
   SessionTranscript,
   type VerificationCallback,
 } from './mdoc'
-import type { IdentifierListCwt } from './mdoc/models/identifier-list-cwt'
 
 export class Holder {
   /**
@@ -29,7 +28,7 @@ export class Holder {
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'cose' | 'x509' | 'crypto' | 'fetch'>
-  ): Promise<{ trustedIssuanceChain: Uint8Array[]; statusList?: StatusListCwt; trustedStatusListChain?: Uint8Array[]; identifierList?: IdentifierListCwt; trustedIdentifierListChain?: Uint8Array[] }> {
+  ): Promise<IssuerSignedVerificationResult> {
     const issuerSigned =
       typeof options.issuerSigned === 'string'
         ? IssuerSigned.decode(base64url.decode(options.issuerSigned))
