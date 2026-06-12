@@ -35,6 +35,14 @@ export type IssuerAuthOptions = Omit<Sign1Options, 'payload'> & {
   payload?: Sign1Options['payload'] | MobileSecurityObject
 }
 
+export type IssuerAuthVerificationResult = {
+  trustedIssuanceChain: Uint8Array[]
+  statusList?: StatusListCwt
+  trustedStatusListChain?: Uint8Array[]
+  identifierList?: IdentifierListCwt
+  trustedIdentifierListChain?: Uint8Array[]
+}
+
 export class IssuerAuth extends Sign1 {
   public static create(options: IssuerAuthOptions): IssuerAuth {
     return super.create({
@@ -103,7 +111,12 @@ export class IssuerAuth extends Sign1 {
       trustedStatusCertificates?: Uint8Array[]
     },
     ctx: Pick<MdocContext, 'fetch' | 'x509' | 'cose'>
-  ): Promise<{ statusList?: StatusListCwt; trustedStatusListChain?: Uint8Array[]; identifierList?: IdentifierListCwt; trustedIdentifierListChain?: Uint8Array[] }> {
+  ): Promise<{
+    statusList?: StatusListCwt
+    trustedStatusListChain?: Uint8Array[]
+    identifierList?: IdentifierListCwt
+    trustedIdentifierListChain?: Uint8Array[]
+  }> {
     const status = this.mobileSecurityObject.status
     if (!status || (!status.statusList && !status.identifierList)) return {}
 
@@ -238,7 +251,7 @@ export class IssuerAuth extends Sign1 {
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'x509' | 'cose' | 'fetch'>
-  ): Promise<{ trustedIssuanceChain: Uint8Array[]; statusList?: StatusListCwt; trustedStatusListChain?: Uint8Array[]; identifierList?: IdentifierListCwt; trustedIdentifierListChain?: Uint8Array[] }> {
+  ): Promise<IssuerAuthVerificationResult> {
     const verificationCallback = options.verificationCallback ?? defaultVerificationCallback
     const now = options.now ?? new Date()
     const disableCertificateChainValidation = options.disableCertificateChainValidation ?? false
@@ -340,10 +353,18 @@ export class IssuerAuth extends Sign1 {
 
     onCheck({
       status: trustedIssuanceChain ? 'PASSED' : 'FAILED',
-      check: 'Unable to determine a trusted issuance chain for the provided trusted certificates and the signer of the issuer auth',
-      reason: `Unable to determine a trusted issuance chain for the provided trusted certificates and the signer of the issuer auth`,
+      check:
+        'Unable to determine a trusted issuance chain for the provided trusted certificates and the signer of the issuer auth',
+      reason:
+        'Unable to determine a trusted issuance chain for the provided trusted certificates and the signer of the issuer auth',
     })
 
-    return { trustedIssuanceChain: trustedIssuanceChain as Uint8Array[], statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain }
+    return {
+      trustedIssuanceChain: trustedIssuanceChain as Uint8Array[],
+      statusList,
+      trustedStatusListChain,
+      identifierList,
+      trustedIdentifierListChain,
+    }
   }
 }

@@ -151,7 +151,16 @@ suite('Verification', () => {
     )
 
     expect(result).toHaveLength(1)
-    const [{ document, trustedIssuanceChain, statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain }] = result
+    const [
+      {
+        document,
+        trustedIssuanceChain,
+        statusList,
+        trustedStatusListChain,
+        identifierList,
+        trustedIdentifierListChain,
+      },
+    ] = result
     expect(document).toBeDefined()
     expect(trustedIssuanceChain).toHaveLength(1)
     expect(trustedIssuanceChain[0]).toEqual(new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData))
@@ -451,7 +460,16 @@ suite('Verification', () => {
     )
 
     expect(result).toHaveLength(1)
-    const [{ document, trustedIssuanceChain, statusList: resultStatusList, trustedStatusListChain, identifierList, trustedIdentifierListChain }] = result
+    const [
+      {
+        document,
+        trustedIssuanceChain,
+        statusList: resultStatusList,
+        trustedStatusListChain,
+        identifierList,
+        trustedIdentifierListChain,
+      },
+    ] = result
     expect(document).toBeDefined()
     expect(trustedIssuanceChain).toHaveLength(1)
     expect(trustedIssuanceChain[0]).toEqual(new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData))
