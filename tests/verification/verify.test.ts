@@ -1104,4 +1104,97 @@ suite('Verification', () => {
     expect(mso.status?.statusList?.uri).toBe('https://issuer.example/status/1')
     expect(mso.status?.statusList?.idx).toBe(42)
   })
+
+  // Regression tests for status-certificate selection across multiple trusted-certificate
+  // entries. After the issuer chain validates, the verifier must pick the `status` certs from
+  // the SAME entry whose `issuance` certs actually anchored the chain — not just the first entry.
+  // A previous `.map()` (instead of `.some()`) always returned a truthy array, so `find()` matched
+  // the first entry unconditionally and the wrong `status` certificates were used. These tests use
+  // more than one entry so the wrong-entry behaviour is observable; with a single entry both
+  // implementations happen to agree.
+  suite('Status certificate selection across multiple trusted certificates', () => {
+    const idx = 3
+    const issuerCert = new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)
+    const otherCert = new Uint8Array(new X509Certificate(INVALID_CERTIFICATE).rawData)
+
+    // Signs a valid status-list CWT (signer = the issuer key, chain = the issuer cert) where the
+    // credential's index is Valid, and serves it from `uri`.
+    const mockValidStatusList = async (uri: string, path: string) => {
+      const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
+      const statusListCwt = new StatusListCwt({
+        payload: { statusList, subject: uri },
+        protectedHeaders: ProtectedHeaders.create({
+          protectedHeaders: new Map<number, unknown>([
+            [RegisteredCwtHeaderClaimKey.X5Chain, [issuerCert]],
+            [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
+          ]),
+        }),
+      })
+      statusListCwt.updateStatusList(idx, StatusType.Valid)
+      const encodedCwt = await statusListCwt.signAndEncode(
+        { signingKey: CoseKey.fromJwk(ISSUER_PRIVATE_KEY_JWK), algorithm: SignatureAlgorithm.ES256 },
+        { sign: mdocContext.cose.sign1.sign }
+      )
+
+      nock('https://example.org')
+        .matchHeader('Accept', /application\/statuslist\+cwt/)
+        .persist()
+        .get(path)
+        .reply(200, Buffer.from(encodedCwt), { 'Content-Type': MediaTypes.StatusListCwt })
+    }
+
+    const signCredentialWithStatus = async (uri: string) => {
+      const issuer = new Issuer('org.iso.18013.5.1', mdocContext)
+      issuer.addIssuerNamespace('org.iso.18013.5.1.mDL', { first_name: 'First', last_name: 'Last' })
+
+      const issuerSigned = await issuer.sign({
+        signingKey: CoseKey.fromJwk(ISSUER_PRIVATE_KEY_JWK),
+        certificates: [issuerCert],
+        algorithm: SignatureAlgorithm.ES256,
+        digestAlgorithm: 'SHA-256',
+        deviceKeyInfo: { deviceKey: DeviceKey.fromJwk(DEVICE_JWK_PUBLIC) },
+        validityInfo: { signed, validFrom, validUntil },
+        status: { statusList: { idx, uri } },
+      })
+
+      return IssuerSigned.fromEncodedForOid4Vci(issuerSigned.encodedForOid4Vci)
+    }
+
+    test('selects the status certs from the entry whose issuance anchored the chain (matching entry is not first)', async () => {
+      const uri = 'https://example.org/status-list/50'
+      await mockValidStatusList(uri, '/status-list/50')
+      const credential = await signCredentialWithStatus(uri)
+
+      // The first entry does NOT contain the chain's root in `issuance`, and carries a `status` cert
+      // that cannot verify the status-list CWT. Only the second entry actually anchors the chain and
+      // carries the correct `status` cert. The verifier must skip the first entry and use the second.
+      const trustedCertificates = [
+        { issuance: [otherCert], status: [otherCert] },
+        { issuance: [issuerCert], status: [issuerCert] },
+      ]
+
+      await expect(
+        Holder.verifyIssuerSigned({ issuerSigned: credential, trustedCertificates }, mdocContext)
+      ).resolves.toBeDefined()
+    })
+
+    test('does not borrow status certs from an earlier, non-matching entry', async () => {
+      const uri = 'https://example.org/status-list/51'
+      await mockValidStatusList(uri, '/status-list/51')
+      const credential = await signCredentialWithStatus(uri)
+
+      // Inverse of the test above: the first entry has the correct `status` cert but its `issuance`
+      // does NOT anchor the chain. The matching (second) entry has a `status` cert that cannot verify
+      // the status-list CWT. Selecting by the first entry would wrongly succeed; the matching entry
+      // must be used, so status validation fails.
+      const trustedCertificates = [
+        { issuance: [otherCert], status: [issuerCert] },
+        { issuance: [issuerCert], status: [otherCert] },
+      ]
+
+      await expect(
+        Holder.verifyIssuerSigned({ issuerSigned: credential, trustedCertificates }, mdocContext)
+      ).rejects.toThrow('No trusted certificate was found while validating the X.509 chain')
+    })
+  })
 })
