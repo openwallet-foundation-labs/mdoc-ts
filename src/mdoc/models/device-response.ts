@@ -26,6 +26,8 @@ import { Document, type DocumentEncodedStructure } from './document'
 import { DocumentError, type DocumentErrorStructure } from './document-error'
 import { IssuerSigned } from './issuer-signed'
 import type { SessionTranscript } from './session-transcript'
+import { StatusListCwt } from '@owf/token-status-list'
+import { IdentifierListCwt } from './identifier-list-cwt'
 
 const deviceResponseEncodedSchema = typedMap([
   ['version', z.string()],
@@ -147,7 +149,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
       category: 'DOCUMENT_FORMAT',
     })
 
-    let usedCertificates: { trustedIssuanceCertificate: Uint8Array } | undefined
+    let ret: Array<{trustedIssuanceChain: Uint8Array[], statusOrIdentifierList?: StatusListCwt | IdentifierListCwt, document: Document}> = []
     for (const document of documents ?? []) {
       await document.deviceSigned.deviceAuth.verify(
         {
@@ -159,7 +161,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
         ctx
       )
 
-      usedCertificates = await document.issuerSigned.verify(
+      const {statusOrIdentifierList,trustedIssuanceChain } = = await document.issuerSigned.verify(
         {
           verificationCallback: onCheck,
           disableCertificateChainValidation: options.disableCertificateChainValidation,
@@ -170,6 +172,7 @@ export class DeviceResponse extends CborStructure<DeviceResponseEncodedStructure
         },
         ctx
       )
+      ret.push({statusOrIdentifierList,document,trustedIssuanceChain})
     }
 
     if (options.deviceRequest?.docRequests && documents) {
