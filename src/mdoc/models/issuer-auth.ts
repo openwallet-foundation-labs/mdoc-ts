@@ -103,7 +103,7 @@ export class IssuerAuth extends Sign1 {
       trustedStatusCertificates?: Uint8Array[]
     },
     ctx: Pick<MdocContext, 'fetch' | 'x509' | 'cose'>
-  ): Promise<void> {
+  ): Promise<undefined | StatusListCwt | IdentifierListCwt> {
     const status = this.mobileSecurityObject.status
     if (!status) return
     if (!status.statusList && !status.identifierList) return
@@ -178,6 +178,7 @@ export class IssuerAuth extends Sign1 {
       }
 
       cwt.verifyStatus({ uri, idx, now, checkFreshness })
+      return cwt
     }
 
     if (status.identifierList) {
@@ -213,6 +214,8 @@ export class IssuerAuth extends Sign1 {
         const hex = Array.from(id, (b) => b.toString(16).padStart(2, '0')).join('')
         throw new IdentifierFoundInRevokedListError(`Identifier ${hex} found in revoked list at ${uri}`)
       }
+
+      return cwt
     }
   }
 
@@ -226,7 +229,7 @@ export class IssuerAuth extends Sign1 {
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'x509' | 'cose' | 'fetch'>
-  ): Promise<{ trustedIssuanceCertificate: Uint8Array }> {
+  ): Promise<{ trustedIssuanceCain: Uint8Array; statusOrIdentifierList?: StatusListCwt | IdentifierListCwt }> {
     const verificationCallback = options.verificationCallback ?? defaultVerificationCallback
     const now = options.now ?? new Date()
     const disableCertificateChainValidation = options.disableCertificateChainValidation ?? false
@@ -242,6 +245,7 @@ export class IssuerAuth extends Sign1 {
     })
 
     let trustedStatusCertificates: Uint8Array[] | undefined
+    let trustedIssuanceCertificates: Uint8Array[] | undefined
     if (!disableCertificateChainValidation) {
       try {
         if (!trustedCertificates || trustedCertificates?.length <= 0) {
@@ -254,6 +258,7 @@ export class IssuerAuth extends Sign1 {
           now,
         })
 
+        trustedIssuanceCertificates = chain
         trustedStatusCertificates = chain[chain.length - 1]
           ? trustedCertificates.find((tc) => tc.issuance.some((cert) => compareBytes(cert, chain[chain.length - 1])))
               ?.status
@@ -272,9 +277,10 @@ export class IssuerAuth extends Sign1 {
       }
     }
 
+    let statusOrIdentifierList: StatusListCwt | IdentifierListCwt | undefined
     if (!disableStatusValidation) {
       try {
-        await this.verifyStatus(
+        statusOrIdentifierList = await this.verifyStatus(
           {
             now,
             checkFreshness: true,
@@ -320,6 +326,6 @@ export class IssuerAuth extends Sign1 {
       reason: `The MSO must be valid at the time of verification (${now.toUTCString()})`,
     })
 
-    return { trustedIssuanceCertificate: this.certificate }
+    return { trustedIssuanceCain: this.certificate, statusOrIdentifierList }
   }
 }

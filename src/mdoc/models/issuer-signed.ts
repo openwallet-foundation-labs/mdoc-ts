@@ -7,6 +7,8 @@ import { IssuerAuth, type IssuerAuthEncodedStructure } from './issuer-auth'
 import { IssuerNamespaces, type IssuerNamespacesEncodedStructure } from './issuer-namespaces'
 import type { IssuerSignedItem } from './issuer-signed-item'
 import type { Namespace } from './namespace'
+import { StatusListCwt } from '@owf/token-status-list'
+import { IdentifierListCwt } from './identifier-list-cwt'
 
 const issuerSignedSchema = typedMap([
   ['nameSpaces', z.instanceof(IssuerNamespaces)],
@@ -85,7 +87,7 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
       skewSeconds?: number
     },
     ctx: Pick<MdocContext, 'x509' | 'crypto' | 'cose' | 'fetch'>
-  ): Promise<{ trustedIssuanceCertificate: Uint8Array }> {
+  ): Promise<{ trustedIssuanceChain: Uint8Array, statusOrIdentifierList?: StatusListCwt | IdentifierListCwt }> {
     const { valueDigests, digestAlgorithm } = this.issuerAuth.mobileSecurityObject
 
     const onCheck = onCategoryCheck(options.verificationCallback ?? defaultVerificationCallback, 'DATA_INTEGRITY')
@@ -96,7 +98,7 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
     })
 
     // Verify the issuer auth
-    const { trustedIssuanceCertificate } = await this.issuerAuth.verify(options, ctx)
+    const { trustedIssuanceChain, statusOrIdentifierList } = await this.issuerAuth.verify(options, ctx)
 
     const namespaces = this.issuerNamespaces?.issuerNamespaces ?? new Map<string, IssuerSignedItem[]>()
 
@@ -171,7 +173,7 @@ export class IssuerSigned extends CborStructure<IssuerSignedEncodedStructure, Is
       })
     )
 
-    return { trustedIssuanceCertificate }
+    return { trustedIssuanceChain: trustedIssuanceChain,statusOrIdentifierList }
   }
 
   public static create(options: IssuerSignedOptions): IssuerSigned {
