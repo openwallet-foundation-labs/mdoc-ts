@@ -1,5 +1,37 @@
 # @owf/mdoc
 
+## 0.7.0
+
+### Minor Changes
+
+- 97425f2: Updated MdocContext.mac.sign to MdocContext.mac.authenticate
+- 21abd59: refactor: only allow CoseKey for sign1.verify callback
+- 4a684ee: Return the `documents`, `trustedIssuanceChains`, `trustedStatusListChains`, `trustedIdentifierListChains`, `statusLists` and `identifierLists` to the user after calling verify.
+- 982e9c7: fix: correctly handle detached payload vs payload on sign1 and mac0. The detached payload is not available on the Sign1 and Mac0 classes anymore, and should be provided to the method classes directly. Detached payload cannot be provided anymore when embedded payload is already present. The `mac0` and `sign1` structures are not passed anymore to the context, but the already encoded data is provided.
+- 6e82f06: `trustedCertificates` now has been changed into an array of objects. Where each entry contains `{issuance: Uint8Array[], status?: Uint8Array[]}`. To migrate, use `const newtrustedCertificates = [{issuance: oldTrustedCertificates}]`
+- 9008cf5: feat: implement identifier-list revocation (ISO 18013-5 2nd ed § 12.3.6).
+
+  - Adds `IdentifierList`, `IdentifierListCwtPayload`, `IdentifierListCwt` modelling the spec's CDDL with `CborStructure` + `typedMap` schemas. `IdentifierList` carries `identifiers: { Identifier => IdentifierInfo }` with optional `aggregation_uri` and RFU keys. `includes()` uses `compareBytes` from `@owf/identity-common`.
+  - New enums: `IdentifierListCwtClaimKey` (claim 65530), `CwtClaimKey` (Typ = 16, RFC 9596), `MediaTypes` (IdentifierListCwt = "application/identifierlist+cwt").
+  - `IdentifierListCwt` wraps `@owf/cose`'s `Cwt`; `verifySignature` delegates to `cwt.asSign1.verifySignature`. `fromBytes` enforces § 12.3.6.4: `StatusList` claim must be absent; `typ` claim must equal `application/identifierlist+cwt`; payload schema requires `exp`.
+  - Wires the identifier-list path into `IssuerAuth.verifyStatus` alongside the existing status-list path. When the MSO carries both mechanisms, both are verified. The identifier-list branch extracts the x5chain from the CWT's protected header, validates the chain against `trustedStatusCertificates`, derives the public key via `ctx.x509.getPublicKey`, verifies the signature via `ctx.cose.sign1.verify`, and throws when the identifier appears in the list. New error types: `UnableToExtractX5ChainFromIdentifierListError`, `InvalidIdentifierListSignatureError`.
+  - `IssuerAuth.verifyStatus` now returns `Promise<void>` (was `Promise<Uint8Array | undefined>`) — the matched-cert concept doesn't carry meaning for the status / identifier list paths the way it does for the mdoc issuer chain. `IssuerAuth.verify` / `IssuerSigned.verify` / `Holder.verify` / `DeviceResponse.verify` drop `trustedStatusCertificate` from their return values for the same reason. Returning the full verified chain for audit / compliance is left as a future enhancement.
+
+- d09d284: feat: add `IsoMdocDcApiHandover` for the ISO 18013-7 Annex C `org-iso-mdoc` DC API protocol, with a `SessionTranscript.forIsoMdocDcApi` factory. Shape: `[ "dcapi", SHA-256(CBOR([encInfoB64u, origin])) ]`. Distinct from the OpenID4VP DC API handover; needed when verifying responses from a wallet that answered an `org-iso-mdoc` request (the only protocol Safari on iOS 26 supports).
+- 21abd59: only allow CoseKey as return value for getPublicKey
+
+### Patch Changes
+
+- cde2491: Fix `deviceSignature` emitting a malformed `kid` header (`{ 4: undefined }`) when the device signing key has no `keyId`. `DeviceResponse.create` now only sets the `kid` unprotected header when a `keyId` is present, matching `DeviceSignedBuilder`.
+- 6dc5052: Constrain generated `DigestID` values to `[0, 2^31 - 1]` as mandated by ISO/IEC 18013-5 §12.3.4. `randomUnsignedInteger` previously used `>>> 0`, producing values in `[0, 2^32 - 1]`; the most significant bit is now masked off so parsers that deserialize `digestID` into a signed/u31 range no longer fail with a CBOR decoding error.
+- 5f0b6b6: feat: add support for Node 26
+- d22e526: - Check signature on CWT status list, jwt is not checked yet.
+  - Allow to pass in `trustedRevocationCertificates` to verify the leaf cert for the status list
+  - X5Chain is now added to the protectedheaders instead of the unprotectedheaders
+- f1cd55f: fix: resolve bug in selecting status cert based on issuance cert
+- d0575f0: Bump `@owf/cose`, `@owf/identity-common`, and `@owf/token-status-list` to `0.3.0-alpha-20260605053037`, and encode the COSE `kid` header (label 4) as a byte string per RFC 8152. The new `@owf/cose` typed-header schema rejects the text-string form previously emitted; bytes was always the spec-compliant encoding.
+- cfbf104: chore: update to stable 0.3.x versions of @owf libraries
+
 ## 0.6.0
 
 ### Minor Changes
