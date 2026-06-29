@@ -42,7 +42,7 @@
     "@noble/hashes": "^2.2.0",
     "@panva/hkdf": "^1.2.1",
     "@peculiar/x509": "^2.0.0",
-    "@types/node": "^25.5.0",
+    "@types/node": "^26.0.1",
     "jose": "^6.2.2",
     "nock": "^14.0.15",
     "reflect-metadata": "^0.2.2",
