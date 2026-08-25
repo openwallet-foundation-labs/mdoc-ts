@@ -49,7 +49,7 @@ function createNonCanonicalPlaceOfBirthItemBytes() {
 }
 
 describe('IssuerSignedItem original bytes', () => {
-  test('verify and encode use received tag-24 bytes, not a re-encode', async () => {
+  test('isValid hashes received tag-24 bytes, not a re-encode', async () => {
     const innerBytes = createNonCanonicalPlaceOfBirthItemBytes()
     const namespaces = IssuerNamespaces.fromEncodedStructure(
       new Map([['eu.europa.ec.eudi.pid.1', [DataItem.fromBuffer(innerBytes)]]])
@@ -58,19 +58,15 @@ describe('IssuerSignedItem original bytes', () => {
     if (!item) throw new Error('expected decoded issuer signed item')
 
     const receivedTaggedBytes = cborEncode(DataItem.fromBuffer(innerBytes))
-    const reEncoded = IssuerSignedItem.fromOptions({
+    const fromOptionsEncoded = IssuerSignedItem.fromOptions({
       digestId: item.digestId,
       random: item.random,
       elementIdentifier: item.elementIdentifier,
       elementValue: item.elementValue,
     }).encode({ asDataItem: true })
 
-    const encodedItem = namespaces.encodedStructure.get('eu.europa.ec.eudi.pid.1')?.[0]
-    if (!encodedItem) throw new Error('expected encoded issuer signed item')
-
-    expect(hex.encode(reEncoded)).not.toEqual(hex.encode(receivedTaggedBytes))
-    expect(hex.encode(item.encode({ asDataItem: true }))).toEqual(hex.encode(receivedTaggedBytes))
-    expect(hex.encode(encodedItem.buffer)).toEqual(hex.encode(innerBytes))
+    expect(hex.encode(fromOptionsEncoded)).not.toEqual(hex.encode(receivedTaggedBytes))
+    expect(hex.encode(item.encode({ asDataItem: true }))).not.toEqual(hex.encode(receivedTaggedBytes))
 
     const digest = await mdocContext.crypto.digest({
       digestAlgorithm: 'SHA-256',

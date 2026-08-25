@@ -34,9 +34,7 @@ export class IssuerNamespaces extends CborStructure<
         decoded.forEach((value, key) => {
           issuerNamespaces.set(
             key,
-            value.map((isi) =>
-              isi.originalEncoded ? DataItem.fromBuffer(isi.originalEncoded) : DataItem.fromData(isi.encodedStructure)
-            )
+            value.map((isi) => DataItem.fromData(isi.encodedStructure))
           )
         })
         return issuerNamespaces

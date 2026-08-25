@@ -1,6 +1,5 @@
 import {
   type AnyCborStructure,
-  type CborEncodeOptions,
   CborStructure,
   type CborStructureStaticThis,
   cborEncode,
@@ -45,14 +44,14 @@ export class IssuerSignedItem extends CborStructure<
   IssuerSignedItemEncodedStructure,
   IssuerSignedItemDecodedStructure
 > {
-  #originalEncoded?: Uint8Array
+  #originalPayloadBytes?: Uint8Array
 
   public static override get encodingSchema() {
     return issuerSignedItemSchema
   }
 
-  public get originalEncoded() {
-    return this.#originalEncoded
+  public get originalPayloadBytes() {
+    return this.#originalPayloadBytes
   }
 
   public get random() {
@@ -71,18 +70,12 @@ export class IssuerSignedItem extends CborStructure<
     return this.structure.get('digestID')
   }
 
-  public override encode(options?: CborEncodeOptions) {
-    if (options?.asDataItem && this.#originalEncoded) {
-      return cborEncode(DataItem.fromBuffer(this.#originalEncoded))
-    }
-
-    return super.encode(options)
-  }
-
   public async isValid(namespace: Namespace, issuerAuth: IssuerAuth, ctx: Pick<MdocContext, 'crypto'>) {
     const digest = await ctx.crypto.digest({
       digestAlgorithm: issuerAuth.mobileSecurityObject.digestAlgorithm,
-      bytes: this.encode({ asDataItem: true }),
+      bytes: this.originalPayloadBytes
+        ? cborEncode(DataItem.fromBuffer(this.originalPayloadBytes))
+        : this.encode({ asDataItem: true }),
     })
 
     const valueDigests = issuerAuth.mobileSecurityObject.valueDigests.valueDigests
@@ -112,7 +105,7 @@ export class IssuerSignedItem extends CborStructure<
   public static fromDataItem<T extends AnyCborStructure>(this: CborStructureStaticThis<T>, dataItem: unknown): T {
     const item = super.fromDataItem(dataItem) as T
     if (item instanceof IssuerSignedItem && dataItem instanceof DataItem) {
-      item.#originalEncoded = new Uint8Array(dataItem.buffer)
+      item.#originalPayloadBytes = new Uint8Array(dataItem.buffer)
     }
     return item
   }
