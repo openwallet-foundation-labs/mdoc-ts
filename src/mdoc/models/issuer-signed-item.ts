@@ -1,4 +1,13 @@
-import { CborStructure, typedMap, zUint8Array } from '@owf/cose'
+import {
+  type AnyCborStructure,
+  type CborEncodeOptions,
+  CborStructure,
+  type CborStructureStaticThis,
+  cborEncode,
+  DataItem,
+  typedMap,
+  zUint8Array,
+} from '@owf/cose'
 import { compareBytes } from '@owf/identity-common'
 import { z } from 'zod'
 import type { MdocContext } from '../../context'
@@ -36,8 +45,14 @@ export class IssuerSignedItem extends CborStructure<
   IssuerSignedItemEncodedStructure,
   IssuerSignedItemDecodedStructure
 > {
+  #originalEncoded?: Uint8Array
+
   public static override get encodingSchema() {
     return issuerSignedItemSchema
+  }
+
+  public get originalEncoded() {
+    return this.#originalEncoded
   }
 
   public get random() {
@@ -54,6 +69,14 @@ export class IssuerSignedItem extends CborStructure<
 
   public get digestId() {
     return this.structure.get('digestID')
+  }
+
+  public override encode(options?: CborEncodeOptions) {
+    if (options?.asDataItem && this.#originalEncoded) {
+      return cborEncode(DataItem.fromBuffer(this.#originalEncoded))
+    }
+
+    return super.encode(options)
   }
 
   public async isValid(namespace: Namespace, issuerAuth: IssuerAuth, ctx: Pick<MdocContext, 'crypto'>) {
@@ -84,6 +107,14 @@ export class IssuerSignedItem extends CborStructure<
     }
 
     return false
+  }
+
+  public static fromDataItem<T extends AnyCborStructure>(this: CborStructureStaticThis<T>, dataItem: unknown): T {
+    const item = super.fromDataItem(dataItem) as T
+    if (item instanceof IssuerSignedItem && dataItem instanceof DataItem) {
+      item.#originalEncoded = new Uint8Array(dataItem.buffer)
+    }
+    return item
   }
 
   public static fromOptions(options: IssuerSignedItemOptions) {
