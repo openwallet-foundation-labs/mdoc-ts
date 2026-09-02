@@ -1,5 +1,85 @@
 # @owf/mdoc
 
+## 0.8.0
+
+### Minor Changes
+
+- aa67c35: Add ISO/IEC TS 18013-7:2025 Annex C (`org-iso-mdoc`) DC API support: `EncryptionInfo`,
+  `EncryptionParameters`, `EncryptedResponse` and `EncryptedResponseData` models, optional
+  `crypto.hpke` context callbacks, and an `IsoMdocDcApi` API to create/parse requests and
+  create/decrypt/verify encrypted responses.
+- aa67c35: `DeviceResponse.createWithDeviceRequest` now takes a `documents` array instead of a single
+  `issuerSigned` list with one shared device key, so a response can disclose several documents that
+  each bring their own device key and device namespaces. Every document names the doc request it
+  answers through `docRequestIndex`, so a request may also be answered partially.
+  `Holder.createDeviceResponseForDeviceRequest` takes the same options.
+
+  ```ts
+  await DeviceResponse.createWithDeviceRequest(
+    {
+      deviceRequest,
+      sessionTranscript,
+      documents: [
+        { issuerSigned, docRequestIndex: 0, signature: { signingKey } },
+      ],
+    },
+    ctx
+  );
+  ```
+
+- 337c841: Unify MSO revocation list verification (ISO/IEC 18013-5 second edition § 12.3.6) on the typed CWT
+  structures of `@owf/cose`, and complete it.
+
+  The status list and identifier list mechanisms now run the same checks instead of each path checking
+  a different subset:
+
+  - `sub` shall equal the `uri` the list was referenced by, so a list published for one URI can no
+    longer be replayed for another under the same trust anchor.
+  - `exp` shall be present (§ 12.3.6.3) and shall not have passed; `iat` shall be present and not be
+    in the future (subject to `checkFreshness`).
+  - Both comparisons accept a `skewSeconds` tolerance, defaulting to 30 seconds and threaded through
+    from `IssuerAuth.verify` like the `ValidityInfo` checks.
+  - Only `StatusType.Valid` is accepted, per § 12.3.6.1's "no other status besides 'revoked'".
+
+  `IdentifierListCwt` is now a `Cwt` subclass built the same way as `StatusListCwt`, rather than a
+  wrapper that decoded the payload itself:
+
+  - `IdentifierListCwtPayload` extends `CwtPayload`, so `subject`, `issuedAt` and `expirationTime` are
+    the inherited registered-claim accessors, narrowed to non-optional by the claims schema. Its
+    `verifyClaims` layers the § 12.3.6 rules on the generic CWT claim verification, the way
+    `StatusListCwtPayload.verifyClaims` layers the Token Status List ones.
+  - `IdentifierListCwtProtectedHeaders` extends `ProtectedHeaders` with `typ` (16) narrowed to
+    `application/identifierlist+cwt`, replacing `IdentifierListCwtHeader` and its hand-rolled schema.
+    Headers decoded from a token keep the bytes they were signed over.
+  - `IdentifierListCwt.verify` checks the signature, the claims and the MSO's identifier in one call,
+    mirroring `StatusListCwt.verify`.
+  - The `StatusList` claim § 12.3.6.4 forbids is rejected by the claims schema rather than by a
+    separate check, so the two mechanisms cannot be mixed in one token.
+
+  Breaking:
+
+  - `IdentifierListCwtHeader` / `IdentifierListCwtHeaderKey` are replaced by
+    `IdentifierListCwtProtectedHeaders` and `RegisteredCwtHeaderClaimKey.Typ`.
+  - `IdentifierListCwt.fromBytes` is `IdentifierListCwt.fromToken`, and an `IdentifierListCwt` is
+    constructed with `new IdentifierListCwt({ payload, protectedHeaders })` — `typ` is defaulted.
+  - `IdentifierListCwt.verifyStatus` takes the `id` only and checks the list membership; the claim
+    checks moved to `verifyClaims`.
+  - `IdentifierListCwtPayload.create` takes a required `uri` (written as `sub`) and `expirationTime`.
+  - A status list without `exp` or `iat` is now rejected rather than accepted.
+  - `InvalidAlgorithmError` and `InvalidMessageAuthenticationCode` are removed. Nothing throws them
+    any more: the algorithm and MAC failures they reported are now `CoseInvalidSignatureError` from
+    `@owf/cose`, mapped onto `InvalidSignatureError`.
+  - Requires `@owf/cose` 0.4.0 and `@owf/token-status-list` 0.4.0.
+
+### Patch Changes
+
+- 833c17b: Forward the issuer's own `IssuerSignedItemBytes` when presenting a credential, instead of re-encoding each item from its decoded structure. A verifier digests the bytes it receives and compares them to `valueDigests`, so re-encoding made genuine claims from other CBOR encoders fail at the verifier.
+- 337c841: Require the identifier list CWT's `typ` in the COSE protected header (RFC 9596 label 16) instead of as a CWT payload claim. Verification of an mdoc whose MSO carries an `identifierList` status previously failed with `Expected key '16' to be defined` against every issuer that follows the spec, since `typ` is a header parameter — the same place `@owf/token-status-list` writes it on a status list CWT. It is checked before the payload is decoded, so a token of another media type is rejected as such.
+
+  Adds `IdentifierListCwtHeader`, a typed structure for the CWT's protected header (`alg`, `x5chain`, `typ`) alongside the existing `IdentifierListCwtPayload`.
+
+- 833c17b: Verify `IssuerSignedItem` digests over the received tag-24 bytes instead of a re-encode, so credentials from other CBOR encoders still pass `isValid`.
+
 ## 0.7.0
 
 ### Minor Changes
