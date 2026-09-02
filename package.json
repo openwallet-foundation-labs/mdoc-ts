@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.16",
-    "@changesets/cli": "^2.30.0",
+    "@changesets/cli": "^3.0.1",
     "@noble/curves": "^2.2.0",
     "@noble/hashes": "^2.2.0",
     "@panva/hkdf": "^1.2.1",
