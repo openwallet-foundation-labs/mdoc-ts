@@ -2,7 +2,7 @@ import {
   CoseInvalidSignatureError,
   RegisteredCwtClaimKey,
   RegisteredCwtHeaderClaimKey,
-  SignatureAlgorithm,
+  type SignatureAlgorithm,
 } from '@owf/cose'
 import { fetchStatusList, SLException, StatusListCwt, type StatusListInfo } from '@owf/token-status-list'
 import type { MdocContext } from '../../context'
