@@ -2,33 +2,20 @@ import {
   CosePayloadMustBeDefinedError,
   cborDecode,
   DataItem,
-  MacAlgorithm,
-  RegisteredCwtHeaderClaimKey,
   Sign1,
   type Sign1EncodedStructure,
   type Sign1Options,
-  SignatureAlgorithm,
   zUint8Array,
 } from '@owf/cose'
 import { compareBytes } from '@owf/identity-common'
-import { fetchStatusList, StatusListCwt } from '@owf/token-status-list'
+import type { StatusListCwt } from '@owf/token-status-list'
 import z from 'zod'
 import type { MdocContext } from '../../context.js'
 import { defaultVerificationCallback, onCategoryCheck, type VerificationCallback } from '../check-callback.js'
-import {
-  IdentifierFoundInRevokedListError,
-  InvalidAlgorithmError,
-  InvalidIdentifierListSignatureError,
-  InvalidMessageAuthenticationCode,
-  InvalidSignatureError,
-  JwtNotSupportForStatusListError,
-  NoPublicKeySetOnStatusListError,
-  TrustedRevocationCertificatesMustContainAtleastOneCertificateError,
-  UnableToExtractX5ChainFromCwtError,
-  UnableToExtractX5ChainFromIdentifierListError,
-} from '../errors.js'
-import { IdentifierListCwt } from './identifier-list-cwt'
+import { TrustedRevocationCertificatesMustContainAtleastOneCertificateError } from '../errors.js'
+import type { IdentifierListCwt } from './identifier-list-cwt'
 import { MobileSecurityObject, type MobileSecurityObjectEncodedStructure } from './mobile-security-object.js'
+import { verifyIdentifierListToken, verifyStatusListToken } from './mso-revocation-list'
 
 export type IssuerAuthEncodedStructure = Sign1EncodedStructure
 export type IssuerAuthOptions = Omit<Sign1Options, 'payload'> & {
@@ -103,10 +90,13 @@ export class IssuerAuth extends Sign1 {
   public async verifyStatus(
     {
       now = new Date(),
+      skewSeconds,
       checkFreshness,
       trustedStatusCertificates,
     }: {
       now?: Date
+      /** Tolerance applied to the `exp` and `iat` of a revocation list. Defaults to 30 seconds. */
+      skewSeconds?: number
       checkFreshness?: boolean
       trustedStatusCertificates?: Uint8Array[]
     },
@@ -126,119 +116,38 @@ export class IssuerAuth extends Sign1 {
       )
     }
 
-    let statusList: StatusListCwt | undefined
-    let trustedStatusListChain: Uint8Array[] | undefined
-
-    if (status.statusList) {
-      const { uri, idx } = status.statusList
-      const statusListToken = await fetchStatusList({ uri, customFetcher: ctx.fetch, acceptedFormats: ['cwt'] })
-
-      if (typeof statusListToken === 'string') {
-        throw new JwtNotSupportForStatusListError(
-          'Could not verify status list token. @owf/mdoc currently does not support JWT format for status list, only CWT'
+    const statusListResult = status.statusList
+      ? await verifyStatusListToken(
+          {
+            statusListInfo: status.statusList,
+            trustedCertificates: trustedStatusCertificates,
+            now,
+            skewSeconds,
+            checkFreshness,
+          },
+          ctx
         )
-      }
+      : undefined
 
-      const cwt = StatusListCwt.fromToken(statusListToken)
-
-      // TODO: we should add this utility section to the cwt/sign1/mac0 class
-      // TODO: support multiple ways to set the public key
-      const x5c = cwt.protectedHeaders?.headers.get(RegisteredCwtHeaderClaimKey.X5Chain) as
-        | Uint8Array
-        | Uint8Array[]
-        | undefined
-
-      if (!x5c) {
-        throw new UnableToExtractX5ChainFromCwtError()
-      }
-
-      const algorithm = cwt.protectedHeaders?.headers.get(RegisteredCwtHeaderClaimKey.Algorithm) as SignatureAlgorithm
-      const x5chain =
-        x5c instanceof Uint8Array
-          ? [x5c]
-          : Array.isArray(x5c) && x5c.every((e) => e instanceof Uint8Array)
-            ? x5c
-            : undefined
-
-      if (!x5chain) {
-        throw new UnableToExtractX5ChainFromCwtError()
-      }
-
-      const [certificate] = x5chain
-
-      const { chain: statusChain } = await ctx.x509.verifyCertificateChain({
-        trustedCertificates: trustedStatusCertificates,
-        x5chain,
-      })
-
-      const publicKey = await ctx.x509.getPublicKey({ certificate, algorithm })
-      const alg = algorithm ?? publicKey.algorithm
-
-      if (!publicKey) {
-        throw new NoPublicKeySetOnStatusListError()
-      }
-
-      if (Object.values(SignatureAlgorithm).includes(alg as SignatureAlgorithm)) {
-        if (!(await cwt.verifySignature({ key: publicKey }, ctx.cose.sign1))) {
-          throw new InvalidSignatureError('Incorrect signature for CWT statuslist')
-        }
-      } else if (Object.values(MacAlgorithm).includes(alg as unknown as MacAlgorithm)) {
-        if (!(await cwt.verifyAuthenticationCode({ key: publicKey }, ctx.cose.mac0))) {
-          throw new InvalidMessageAuthenticationCode('Incorrect message authentication code for CWT status list')
-        }
-      } else {
-        throw new InvalidAlgorithmError(
-          `Invalid algorithm (claim ${RegisteredCwtHeaderClaimKey.Algorithm}) set. Value '${alg}', therefore unable to verify the CWT token status list`
+    const identifierListResult = status.identifierList
+      ? await verifyIdentifierListToken(
+          {
+            identifierListInfo: status.identifierList,
+            trustedCertificates: trustedStatusCertificates,
+            now,
+            skewSeconds,
+            checkFreshness,
+          },
+          ctx
         )
-      }
+      : undefined
 
-      cwt.verifyStatus({ uri, idx, now, checkFreshness })
-      statusList = cwt
-      trustedStatusListChain = statusChain
+    return {
+      statusList: statusListResult?.statusListCwt,
+      trustedStatusListChain: statusListResult?.chain,
+      identifierList: identifierListResult?.identifierListCwt,
+      trustedIdentifierListChain: identifierListResult?.chain,
     }
-
-    let identifierList: IdentifierListCwt | undefined
-    let trustedIdentifierListChain: Uint8Array[] | undefined
-
-    if (status.identifierList) {
-      // ISO/IEC 18013-5 second edition § 12.3.6.4 (identifier list).
-      // The MSO's `IdentifierListInfo` carries the URI of an
-      // `IdentifierListCwt` and the per-MSO `id` (bstr). The list
-      // enumerates revoked identifiers; presence == revoked.
-      const { uri, id } = status.identifierList
-      const cwt = await IdentifierListCwt.fetch(uri, ctx)
-
-      const x5chain = cwt.x5chain
-      if (!x5chain || x5chain.length === 0) {
-        throw new UnableToExtractX5ChainFromIdentifierListError()
-      }
-
-      // Identifier-list CWTs MUST carry an x5chain in the protected
-      // header (§ 12.3.6.3); the chain anchors back to a trusted
-      // status-cert root so the caller can vet the issuer.
-      const { chain: identifierChain } = await ctx.x509.verifyCertificateChain({
-        trustedCertificates: trustedStatusCertificates,
-        x5chain,
-      })
-
-      const [certificate] = x5chain
-      const publicKey = await ctx.x509.getPublicKey({ certificate, algorithm: cwt.algorithm })
-
-      if (!(await cwt.verifySignature({ key: publicKey }, ctx.cose.sign1))) {
-        throw new InvalidIdentifierListSignatureError('Incorrect signature for CWT identifier list')
-      }
-
-      // Spec: revoked iff the MSO's identifier is present in the list.
-      if (cwt.includes(id)) {
-        const hex = Array.from(id, (b) => b.toString(16).padStart(2, '0')).join('')
-        throw new IdentifierFoundInRevokedListError(`Identifier ${hex} found in revoked list at ${uri}`)
-      }
-
-      identifierList = cwt
-      trustedIdentifierListChain = identifierChain
-    }
-
-    return { statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain }
   }
 
   public async verify(
@@ -308,6 +217,7 @@ export class IssuerAuth extends Sign1 {
         ;({ statusList, trustedStatusListChain, identifierList, trustedIdentifierListChain } = await this.verifyStatus(
           {
             now,
+            skewSeconds,
             checkFreshness: true,
             trustedStatusCertificates,
           },

@@ -10,6 +10,9 @@ import {
   DeviceResponse,
   DocRequest,
   Holder,
+  IdentifierList,
+  IdentifierListCwt,
+  MediaTypes as IdentifierListMediaTypes,
   Issuer,
   IssuerSigned,
   ItemsRequest,
@@ -365,12 +368,265 @@ suite('Verification', () => {
     ).resolves.toBeDefined()
   })
 
+  const issueMdocWithStatus = async (status: {
+    statusList?: { idx: number; uri: string }
+    identifierList?: { id: Uint8Array; uri: string }
+  }) => {
+    const issuer = new Issuer('org.iso.18013.5.1', mdocContext)
+    issuer.addIssuerNamespace('org.iso.18013.5.1.mDL', { first_name: 'First', last_name: 'Last' })
+
+    const issuerSigned = await issuer.sign({
+      signingKey: CoseKey.fromJwk(ISSUER_PRIVATE_KEY_JWK),
+      certificates: [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)],
+      algorithm: SignatureAlgorithm.ES256,
+      digestAlgorithm: 'SHA-256',
+      deviceKeyInfo: { deviceKey: DeviceKey.fromJwk(DEVICE_JWK_PUBLIC) },
+      validityInfo: { signed, validFrom, validUntil },
+      status,
+    })
+
+    return IssuerSigned.fromEncodedForOid4Vci(issuerSigned.encodedForOid4Vci)
+  }
+
+  const verifyIssuerSigned = (credential: IssuerSigned, options: { skewSeconds?: number } = {}) =>
+    Holder.verifyIssuerSigned(
+      { issuerSigned: credential, trustedCertificates: validTrustedCertificates, ...options },
+      mdocContext
+    )
+
+  const signStatusListCwt = async ({
+    uri,
+    idx,
+    status = StatusType.Valid,
+    subject,
+    issuedAt,
+    expirationTime = new Date(Date.now() + 3_600_000),
+  }: {
+    uri: string
+    idx: number
+    status?: StatusType
+    subject?: string
+    issuedAt?: Date
+    /** `null` omits the claim; absent uses the conformant default. */
+    expirationTime?: Date | null
+  }) => {
+    const statusListCwt = new StatusListCwt({
+      payload: {
+        statusList: new StatusList(new Array(10).fill(StatusType.Invalid), 2),
+        subject: subject ?? uri,
+        issuedAt,
+        expirationTime: expirationTime ?? undefined,
+      },
+      protectedHeaders: ProtectedHeaders.create({
+        protectedHeaders: new Map<number, unknown>([
+          [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
+          [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
+        ]),
+      }),
+    })
+    statusListCwt.updateStatusList(idx, status)
+
+    return Buffer.from(
+      await statusListCwt.signAndEncode(
+        { signingKey: CoseKey.fromJwk(ISSUER_PRIVATE_KEY_JWK), algorithm: SignatureAlgorithm.ES256 },
+        { sign: mdocContext.cose.sign1.sign }
+      )
+    )
+  }
+
+  const mockStatusList = async (path: string, options: Omit<Parameters<typeof signStatusListCwt>[0], 'uri'>) => {
+    const uri = `https://example.org${path}`
+
+    nock('https://example.org')
+      .matchHeader('Accept', /application\/statuslist\+cwt/)
+      .persist()
+      .get(path)
+      .reply(200, await signStatusListCwt({ uri, ...options }), { 'Content-Type': MediaTypes.StatusListCwt })
+
+    return uri
+  }
+
+  // Token Status List, made binding by § 12.3.6.1: `sub` shall equal the uri the list was
+  // referenced by.
+  test('Verify mdoc with a status list whose subject does not match the uri it was fetched from', async () => {
+    const idx = 3
+    const uri = await mockStatusList('/status-list/wrong-subject', {
+      idx,
+      subject: 'https://example.org/status-list/somewhere-else',
+    })
+
+    const credential = await issueMdocWithStatus({ statusList: { idx, uri } })
+
+    await expect(verifyIssuerSigned(credential)).rejects.toThrow(
+      "The 'Subject (2)' claim 'https://example.org/status-list/somewhere-else' does not match the expected value"
+    )
+  })
+
+  // ISO 18013-5 § 12.3.6.3: "The exp claim shall be present." OPTIONAL in the Token Status List
+  // specification, so it is this profile that rejects a list without one.
+  test('Verify mdoc with a status list that has no expiration', async () => {
+    const idx = 3
+    const uri = await mockStatusList('/status-list/no-exp', { idx, expirationTime: null })
+
+    const credential = await issueMdocWithStatus({ statusList: { idx, uri } })
+
+    await expect(verifyIssuerSigned(credential)).rejects.toThrow(
+      "The token has no 'ExpirationTime (4)' claim, which is required"
+    )
+  })
+
+  test('Verify mdoc with a status list that expired within the allowed skew', async () => {
+    const idx = 3
+    const uri = await mockStatusList('/status-list/skew', { idx, expirationTime: new Date(Date.now() - 10_000) })
+
+    const credential = await issueMdocWithStatus({ statusList: { idx, uri } })
+
+    // Default skew is 30 seconds, so a list that expired 10 seconds ago is still accepted...
+    await expect(verifyIssuerSigned(credential)).resolves.toBeDefined()
+    // ...but not once the caller narrows the tolerance.
+    await expect(verifyIssuerSigned(credential, { skewSeconds: 1 })).rejects.toThrow('is in the past')
+  })
+
+  test('Verify mdoc with a revoked entry in a status list', async () => {
+    const idx = 3
+    const uri = await mockStatusList('/status-list/revoked', { idx, status: StatusType.Invalid })
+
+    const credential = await issueMdocWithStatus({ statusList: { idx, uri } })
+
+    await expect(verifyIssuerSigned(credential)).rejects.toThrow(
+      `Status for id '${idx}' is not Valid (0), but is instead '1'`
+    )
+  })
+
+  const signIdentifierListCwt = async ({
+    uri,
+    identifiers,
+    subject,
+    issuedAt,
+    expirationTime = new Date(Date.now() + 3_600_000),
+  }: {
+    uri: string
+    identifiers: Array<Uint8Array>
+    subject?: string
+    issuedAt?: Date
+    expirationTime?: Date
+  }) => {
+    const identifierListCwt = new IdentifierListCwt({
+      payload: {
+        identifierList: IdentifierList.create({ identifiers }),
+        uri: subject ?? uri,
+        issuedAt,
+        expirationTime,
+      },
+      // `typ` is defaulted to the identifier list media type, so only the x5chain
+      // § 12.3.6.3 requires and the algorithm have to be supplied.
+      protectedHeaders: new Map<number, unknown>([
+        [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
+        [RegisteredCwtHeaderClaimKey.Algorithm, SignatureAlgorithm.ES256],
+      ]),
+    })
+
+    return Buffer.from(
+      await identifierListCwt.signAndEncode(
+        { signingKey: CoseKey.fromJwk(ISSUER_PRIVATE_KEY_JWK), algorithm: SignatureAlgorithm.ES256 },
+        { sign: mdocContext.cose.sign1.sign }
+      )
+    )
+  }
+
+  const mockIdentifierList = async (
+    path: string,
+    options: Omit<Parameters<typeof signIdentifierListCwt>[0], 'uri'>
+  ) => {
+    const uri = `https://example.org${path}`
+
+    nock('https://example.org')
+      .matchHeader('Accept', IdentifierListMediaTypes.IdentifierListCwt)
+      .persist()
+      .get(path)
+      .reply(200, await signIdentifierListCwt({ uri, ...options }), {
+        'Content-Type': IdentifierListMediaTypes.IdentifierListCwt,
+      })
+
+    return uri
+  }
+
+  // ISO 18013-5 § 12.3.6.4: the list enumerates revoked identifiers, so an MSO whose own
+  // identifier is absent from it is valid.
+  test('Verify mdoc with an identifier list that does not carry its identifier', async () => {
+    const id = new Uint8Array([0xab, 0xcd])
+    const uri = await mockIdentifierList('/identifier-list/valid', { identifiers: [new Uint8Array([0x01])] })
+
+    const credential = await issueMdocWithStatus({ identifierList: { id, uri } })
+
+    await expect(verifyIssuerSigned(credential)).resolves.toBeDefined()
+  })
+
+  test('Verify mdoc with an identifier list that carries its identifier', async () => {
+    const id = new Uint8Array([0xab, 0xcd])
+    const uri = await mockIdentifierList('/identifier-list/revoked', { identifiers: [id] })
+
+    const credential = await issueMdocWithStatus({ identifierList: { id, uri } })
+
+    await expect(verifyIssuerSigned(credential)).rejects.toThrow(
+      `Identifier abcd found in the revoked identifier list at '${uri}'`
+    )
+  })
+
+  // Token Status List, made binding on both mechanisms by § 12.3.6.1: `sub` shall equal the
+  // uri the list was referenced by.
+  test('Verify mdoc with an identifier list whose subject does not match the uri it was fetched from', async () => {
+    const id = new Uint8Array([0xab, 0xcd])
+    const uri = await mockIdentifierList('/identifier-list/wrong-subject', {
+      identifiers: [],
+      subject: 'https://example.org/identifier-list/somewhere-else',
+    })
+
+    const credential = await issueMdocWithStatus({ identifierList: { id, uri } })
+
+    await expect(verifyIssuerSigned(credential)).rejects.toThrow(
+      "The 'Subject (2)' claim 'https://example.org/identifier-list/somewhere-else' does not match the expected value"
+    )
+  })
+
+  test('Verify mdoc with an identifier list that expired within the allowed skew', async () => {
+    const id = new Uint8Array([0xab, 0xcd])
+    const uri = await mockIdentifierList('/identifier-list/skew', {
+      identifiers: [],
+      expirationTime: new Date(Date.now() - 10_000),
+    })
+
+    const credential = await issueMdocWithStatus({ identifierList: { id, uri } })
+
+    // Default skew is 30 seconds, so a list that expired 10 seconds ago is still accepted...
+    await expect(verifyIssuerSigned(credential)).resolves.toBeDefined()
+    // ...but not once the caller narrows the tolerance.
+    await expect(verifyIssuerSigned(credential, { skewSeconds: 1 })).rejects.toThrow('is in the past')
+  })
+
+  // Token Status List § 8.2, applied to the identifier list media type by § 12.3.6.4.
+  test('Verify mdoc with an identifier list served as another media type', async () => {
+    const id = new Uint8Array([0xab, 0xcd])
+    const uri = 'https://example.org/identifier-list/wrong-content-type'
+
+    nock('https://example.org')
+      .persist()
+      .get('/identifier-list/wrong-content-type')
+      .reply(200, await signIdentifierListCwt({ uri, identifiers: [] }), { 'Content-Type': MediaTypes.StatusListCwt })
+
+    const credential = await issueMdocWithStatus({ identifierList: { id, uri } })
+
+    await expect(verifyIssuerSigned(credential)).rejects.toThrow(
+      `Identifier list at ${uri} was served as 'application/statuslist+cwt', expected 'application/identifierlist+cwt'`
+    )
+  })
+
   test('Verify mdoc with status status_list check', async () => {
     const idx = 3
     const uri = 'https://example.org/status-list/10'
     const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
     const statusListCwt = new StatusListCwt({
-      payload: { statusList, subject: uri },
+      payload: { statusList, subject: uri, expirationTime: new Date(Date.now() + 60 * 60 * 1000) },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
           [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
@@ -504,7 +760,7 @@ suite('Verification', () => {
     const uri = 'https://example.org/status-list/10'
     const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
     const statusListCwt = new StatusListCwt({
-      payload: { statusList, subject: uri },
+      payload: { statusList, subject: uri, expirationTime: new Date(Date.now() + 60 * 60 * 1000) },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
           [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
@@ -619,7 +875,7 @@ suite('Verification', () => {
     const uri = 'https://example.org/status-list/30'
     const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
     const statusListCwt = new StatusListCwt({
-      payload: { statusList, subject: uri },
+      payload: { statusList, subject: uri, expirationTime: new Date(Date.now() + 60 * 60 * 1000) },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
           [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
@@ -665,9 +921,7 @@ suite('Verification', () => {
         },
         mdocContext
       )
-    ).rejects.toThrow(
-      'Could not verify status list token. @owf/mdoc currently does not support JWT format for status list, only CWT'
-    )
+    ).rejects.toThrow(`The status list at ${uri} was served in JWT format`)
   })
 
   test('Verify mdoc with status invalid no trusted certificates supplied', async () => {
@@ -675,7 +929,7 @@ suite('Verification', () => {
     const uri = 'https://example.org/status-list/40'
     const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
     const statusListCwt = new StatusListCwt({
-      payload: { statusList, subject: uri },
+      payload: { statusList, subject: uri, expirationTime: new Date(Date.now() + 60 * 60 * 1000) },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
           [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
@@ -733,7 +987,7 @@ suite('Verification', () => {
     const uri = 'https://example.org/status-list/40'
     const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
     const statusListCwt = new StatusListCwt({
-      payload: { statusList, subject: uri },
+      payload: { statusList, subject: uri, expirationTime: new Date(Date.now() + 60 * 60 * 1000) },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
           [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
@@ -793,7 +1047,7 @@ suite('Verification', () => {
     const uri = 'https://example.org/status-list/10'
     const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
     const statusListCwt = new StatusListCwt({
-      payload: { statusList, subject: uri },
+      payload: { statusList, subject: uri, expirationTime: new Date(Date.now() + 60 * 60 * 1000) },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
           [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
@@ -852,7 +1106,7 @@ suite('Verification', () => {
     const uri = 'https://example.org/status-list/20'
     const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
     const statusListCwt = new StatusListCwt({
-      payload: { statusList, subject: uri },
+      payload: { statusList, subject: uri, expirationTime: new Date(Date.now() + 60 * 60 * 1000) },
       protectedHeaders: ProtectedHeaders.create({
         protectedHeaders: new Map<number, unknown>([
           [RegisteredCwtHeaderClaimKey.X5Chain, [new Uint8Array(new X509Certificate(ISSUER_CERTIFICATE).rawData)]],
@@ -1195,7 +1449,7 @@ suite('Verification', () => {
     const mockValidStatusList = async (uri: string, path: string) => {
       const statusList = new StatusList(new Array(10).fill(StatusType.Invalid), 2)
       const statusListCwt = new StatusListCwt({
-        payload: { statusList, subject: uri },
+        payload: { statusList, subject: uri, expirationTime: new Date(Date.now() + 60 * 60 * 1000) },
         protectedHeaders: ProtectedHeaders.create({
           protectedHeaders: new Map<number, unknown>([
             [RegisteredCwtHeaderClaimKey.X5Chain, [issuerCert]],

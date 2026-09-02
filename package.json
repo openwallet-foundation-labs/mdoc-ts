@@ -30,9 +30,9 @@
     "node": ">=20.19"
   },
   "dependencies": {
-    "@owf/cose": "^0.3.0",
-    "@owf/identity-common": "^0.3.0",
-    "@owf/token-status-list": "^0.3.0",
+    "@owf/cose": "^0.4.0-alpha-20260901082001",
+    "@owf/identity-common": "^0.4.0-alpha-20260901082001",
+    "@owf/token-status-list": "^0.4.0-alpha-20260901082001",
     "zod": "^4.4.3"
   },
   "devDependencies": {
