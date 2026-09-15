@@ -515,7 +515,7 @@ describe('matchDeviceRequest', () => {
 
     const match = Verifier.matchDeviceRequest({ deviceRequest, deviceResponse })
 
-    assert(match.success)
+    assert(match.success && !match.docRequestsAsAlternatives)
     const [document] = match.docRequests[0].validDocuments
     expectTypeOf(document.docType).toEqualTypeOf<DocTypeMatchSuccess>()
     expectTypeOf(document.claims).toEqualTypeOf<DocumentClaimsMatchSuccess>()
@@ -629,6 +629,120 @@ describe('matchDeviceRequest', () => {
         matchOptions: { docRequests: [{ docRequestIndex: 0 }, { docRequestIndex: 0, elements: {} }] },
       })
     ).toThrow(new InvalidDeviceRequestMatchOptionsError('Match options are provided more than once for doc request 0'))
+  })
+
+  describe('treatAmbiguousMultipleDocRequestsAsAlternatives', () => {
+    const photoIdDocType = 'org.iso.23220.photoid.1'
+    const alternativesRequest = () =>
+      createDeviceRequest([
+        { namespaces: { [mdlNamespace]: { family_name: true } } },
+        { docType: photoIdDocType, namespaces: { [mdlNamespace]: { family_name: true } } },
+      ])
+
+    test('multiple doc requests all have to be satisfied by default', async () => {
+      const deviceRequest = alternativesRequest()
+      const deviceResponse = await createDeviceResponse({
+        deviceRequest,
+        issuerSigned: [await createIssuerSigned()],
+      })
+
+      const match = Verifier.matchDeviceRequest({ deviceRequest, deviceResponse })
+
+      expect(match).toMatchObject({ success: false, docRequestsAsAlternatives: false })
+      expect(match.docRequests.map((docRequest) => docRequest.success)).toEqual([true, false])
+    })
+
+    test('a response satisfying one of the alternatives satisfies the request', async () => {
+      const deviceRequest = alternativesRequest()
+      const deviceResponse = await createDeviceResponse({
+        deviceRequest,
+        issuerSigned: [await createIssuerSigned()],
+      })
+
+      const match = Verifier.matchDeviceRequest({
+        deviceRequest,
+        deviceResponse,
+        matchOptions: { treatAmbiguousMultipleDocRequestsAsAlternatives: true },
+      })
+
+      expect(match).toMatchObject({ success: true, docRequestsAsAlternatives: true })
+      expect(match.docRequests.map((docRequest) => docRequest.success)).toEqual([true, false])
+
+      assert(match.success)
+      // A successful match of alternatives does not narrow every doc request to successful.
+      if (match.docRequestsAsAlternatives) {
+        expectTypeOf<(typeof match.docRequests)[number]['success']>().toEqualTypeOf<boolean>()
+      }
+    })
+
+    test('a response satisfying none of the alternatives does not satisfy the request', async () => {
+      const disclosedRequest = createDeviceRequest([
+        { docType: 'org.example.other', namespaces: { [mdlNamespace]: { family_name: true } } },
+      ])
+      const deviceResponse = await createDeviceResponse({
+        deviceRequest: disclosedRequest,
+        issuerSigned: [await createIssuerSigned({ docType: 'org.example.other' })],
+      })
+
+      const match = Verifier.matchDeviceRequest({
+        deviceRequest: alternativesRequest(),
+        deviceResponse,
+        matchOptions: { treatAmbiguousMultipleDocRequestsAsAlternatives: true },
+      })
+
+      expect(match).toMatchObject({ success: false, docRequestsAsAlternatives: true })
+    })
+
+    test('a single doc request is not ambiguous, so it is not matched as an alternative', async () => {
+      const deviceRequest = createDeviceRequest([{ namespaces: { [mdlNamespace]: { family_name: true } } }])
+      const deviceResponse = await createDeviceResponse({ deviceRequest, issuerSigned: [await createIssuerSigned()] })
+
+      const match = Verifier.matchDeviceRequest({
+        deviceRequest,
+        deviceResponse,
+        matchOptions: { treatAmbiguousMultipleDocRequestsAsAlternatives: true },
+      })
+
+      expect(match).toMatchObject({ success: true, docRequestsAsAlternatives: false })
+    })
+
+    test('verify reports a single check for the alternatives', async () => {
+      const deviceRequest = alternativesRequest()
+      const deviceResponse = await createDeviceResponse({
+        deviceRequest,
+        issuerSigned: [await createIssuerSigned()],
+      })
+
+      const verify = async (disclosedResponse: DeviceResponse) => {
+        const checks: Array<VerificationAssessment> = []
+        await disclosedResponse.verify(
+          {
+            deviceRequest,
+            deviceRequestMatchOptions: { treatAmbiguousMultipleDocRequestsAsAlternatives: true },
+            sessionTranscript,
+            trustedCertificates: [],
+            disableCertificateChainValidation: true,
+            onCheck: (check) => checks.push(check),
+          },
+          mdocContext
+        )
+        return checks.filter((check) => check.check.startsWith('Device response must satisfy'))
+      }
+
+      expect(await verify(deviceResponse)).toMatchObject([
+        {
+          status: 'PASSED',
+          check: `Device response must satisfy at least one of the alternative doc requests 0 for docType '${mdlDocType}', 1 for docType '${photoIdDocType}'`,
+        },
+      ])
+
+      expect(await verify(DeviceResponse.createSimple({ documents: [] }))).toMatchObject([
+        {
+          status: 'FAILED',
+          reason: `Doc request 0: Device response does not contain a document with docType '${mdlDocType}'. Doc request 1: Device response does not contain a document with docType '${photoIdDocType}'`,
+        },
+      ])
+    })
   })
 
   test('accepts encoded device requests and responses', async () => {

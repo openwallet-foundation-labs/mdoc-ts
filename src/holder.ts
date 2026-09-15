@@ -110,6 +110,11 @@ export class Holder {
   public static matchDeviceRequest(options: {
     deviceRequest: Uint8Array | DeviceRequest
     credentials: Array<IssuerSigned | HolderCredential>
+    /**
+     * See `DeviceRequestMatchOptions.treatAmbiguousMultipleDocRequestsAsAlternatives`. Defaults to
+     * `false`.
+     */
+    treatAmbiguousMultipleDocRequestsAsAlternatives?: boolean
   }): HolderDeviceRequestMatchResult {
     return matchCredentialsToDeviceRequest({
       deviceRequest:
@@ -117,6 +122,7 @@ export class Holder {
           ? options.deviceRequest
           : DeviceRequest.decode(options.deviceRequest),
       credentials: options.credentials,
+      treatAmbiguousMultipleDocRequestsAsAlternatives: options.treatAmbiguousMultipleDocRequestsAsAlternatives,
     })
   }
 

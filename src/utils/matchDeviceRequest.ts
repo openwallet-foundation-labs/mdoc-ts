@@ -77,6 +77,17 @@ export type DeviceRequestMatchOptions = {
    * A doc request can have options at most once.
    */
   docRequests?: Array<DocRequestMatchOptions>
+
+  /**
+   * A device request with more than one doc request does not say whether it asks for all of them, or
+   * for any one of them. By default every doc request has to be satisfied. Set this to treat them as
+   * alternatives instead, of which at least one has to be satisfied, which is a common
+   * interpretation. The second edition of 18013-5 resolves the ambiguity with use cases in
+   * `DeviceRequestInfo`, which are not supported yet.
+   *
+   * Does not apply to a device request with a single doc request. Defaults to `false`.
+   */
+  treatAmbiguousMultipleDocRequestsAsAlternatives?: boolean
 }
 
 export type ClaimMatchBase = {
@@ -250,20 +261,45 @@ export type DocRequestMatchFailure = DocRequestMatchBase & {
 
 export type DocRequestMatch = DocRequestMatchSuccess | DocRequestMatchFailure
 
-type DeviceRequestMatchBase = {
+type DocRequestsAsAlternatives = {
+  /**
+   * Whether the doc requests were matched as alternatives, of which at least one has to be
+   * satisfied, rather than all of them. Only `true` when
+   * `treatAmbiguousMultipleDocRequestsAsAlternatives` is set and the device request has more than
+   * one doc request.
+   */
+  docRequestsAsAlternatives: boolean
+}
+
+type DeviceRequestMatchBase = DocRequestsAsAlternatives & {
   /**
    * Documents in the response whose docType no doc request asked for.
    */
   unrequestedDocuments: Array<{ documentIndex: number; docType: DocType }>
 }
 
-export type DeviceRequestMatchSuccess = DeviceRequestMatchBase & {
-  success: true
-  /**
-   * One entry per doc request, in request order.
-   */
-  docRequests: Array<DocRequestMatchSuccess>
-}
+/**
+ * Every doc request is satisfied or, when matched as alternatives, at least one of them.
+ */
+export type DeviceRequestMatchSuccess = DeviceRequestMatchBase &
+  (
+    | {
+        success: true
+        docRequestsAsAlternatives: false
+        /**
+         * One entry per doc request, in request order.
+         */
+        docRequests: Array<DocRequestMatchSuccess>
+      }
+    | {
+        success: true
+        docRequestsAsAlternatives: true
+        /**
+         * One entry per doc request, in request order. At least one is successful.
+         */
+        docRequests: Array<DocRequestMatch>
+      }
+  )
 
 export type DeviceRequestMatchFailure = DeviceRequestMatchBase & {
   success: false
@@ -346,15 +382,28 @@ export type HolderDocRequestMatchFailure = HolderDocRequestMatchBase & {
 
 export type HolderDocRequestMatch = HolderDocRequestMatchSuccess | HolderDocRequestMatchFailure
 
-export type HolderDeviceRequestMatchSuccess = {
-  success: true
-  /**
-   * One entry per doc request, in request order.
-   */
-  docRequests: Array<HolderDocRequestMatchSuccess>
-}
+/**
+ * Every doc request can be answered or, when matched as alternatives, at least one of them.
+ */
+export type HolderDeviceRequestMatchSuccess =
+  | {
+      success: true
+      docRequestsAsAlternatives: false
+      /**
+       * One entry per doc request, in request order.
+       */
+      docRequests: Array<HolderDocRequestMatchSuccess>
+    }
+  | {
+      success: true
+      docRequestsAsAlternatives: true
+      /**
+       * One entry per doc request, in request order. At least one is successful.
+       */
+      docRequests: Array<HolderDocRequestMatch>
+    }
 
-export type HolderDeviceRequestMatchFailure = {
+export type HolderDeviceRequestMatchFailure = DocRequestsAsAlternatives & {
   success: false
   /**
    * One entry per doc request, in request order.
@@ -387,6 +436,10 @@ export type HolderCredential = {
  * An element only counts as disclosed when it comes from `issuerSigned`, as `deviceSigned` elements
  * are asserted by the mdoc itself rather than by the issuer. Pass `matchOptions` to mark elements
  * that are optional or that are expected to be device-signed.
+ *
+ * By default the match only succeeds when every doc request is satisfied. Set
+ * `treatAmbiguousMultipleDocRequestsAsAlternatives` in `matchOptions` to have it succeed when at
+ * least one is.
  *
  * Shares its matching with {@link matchCredentialsToDeviceRequest}, which matches like a verifier
  * that accepts every element from `'any'` source.
@@ -461,9 +514,15 @@ export const matchDeviceRequest = (options: {
     requestedDocTypes.has(document.docType) ? [] : [{ documentIndex, docType: document.docType }]
   )
 
+  if (matchDocRequestsAsAlternatives(deviceRequest, matchOptions?.treatAmbiguousMultipleDocRequestsAsAlternatives)) {
+    return docRequests.some((docRequest) => docRequest.success)
+      ? { success: true, docRequestsAsAlternatives: true, docRequests, unrequestedDocuments }
+      : { success: false, docRequestsAsAlternatives: true, docRequests, unrequestedDocuments }
+  }
+
   return docRequests.every((docRequest) => docRequest.success)
-    ? { success: true, docRequests, unrequestedDocuments }
-    : { success: false, docRequests, unrequestedDocuments }
+    ? { success: true, docRequestsAsAlternatives: false, docRequests, unrequestedDocuments }
+    : { success: false, docRequestsAsAlternatives: false, docRequests, unrequestedDocuments }
 }
 
 /**
@@ -487,6 +546,9 @@ export const matchDeviceRequest = (options: {
  * A doc request that asks for more than two `age_over_NN` elements in a namespace (18013-5 7.2.5)
  * is not matched against any credential, and fails with `invalidDocRequest`.
  *
+ * By default the match only succeeds when every doc request can be answered. Pass
+ * `treatAmbiguousMultipleDocRequestsAsAlternatives` to have it succeed when at least one can.
+ *
  * Shares its matching with {@link matchDeviceRequest}: a credential matches like a verifier that
  * accepts every element from `'any'` source would match the response. A verifier only accepts
  * issuer-signed elements by default, so a device-signed element only satisfies it when its match
@@ -495,6 +557,11 @@ export const matchDeviceRequest = (options: {
 export const matchCredentialsToDeviceRequest = (options: {
   deviceRequest: DeviceRequest
   credentials: Array<IssuerSigned | HolderCredential>
+  /**
+   * See `DeviceRequestMatchOptions.treatAmbiguousMultipleDocRequestsAsAlternatives`. Defaults to
+   * `false`.
+   */
+  treatAmbiguousMultipleDocRequestsAsAlternatives?: boolean
 }): HolderDeviceRequestMatchResult => {
   const { deviceRequest } = options
   const credentials = options.credentials.map((credential) => {
@@ -559,10 +626,25 @@ export const matchCredentialsToDeviceRequest = (options: {
       : { docRequestIndex, docType, success: false, validCredentials: [], failedCredentials }
   })
 
+  if (matchDocRequestsAsAlternatives(deviceRequest, options.treatAmbiguousMultipleDocRequestsAsAlternatives)) {
+    return docRequests.some((docRequest) => docRequest.success)
+      ? { success: true, docRequestsAsAlternatives: true, docRequests }
+      : { success: false, docRequestsAsAlternatives: true, docRequests }
+  }
+
   return docRequests.every((docRequest) => docRequest.success)
-    ? { success: true, docRequests }
-    : { success: false, docRequests }
+    ? { success: true, docRequestsAsAlternatives: false, docRequests }
+    : { success: false, docRequestsAsAlternatives: false, docRequests }
 }
+
+/**
+ * Whether the doc requests are matched as alternatives. A single doc request is not ambiguous, so it
+ * always has to be satisfied.
+ */
+const matchDocRequestsAsAlternatives = (
+  deviceRequest: DeviceRequest,
+  treatAmbiguousMultipleDocRequestsAsAlternatives = false
+) => treatAmbiguousMultipleDocRequestsAsAlternatives && deviceRequest.docRequests.length > 1
 
 type ElementCandidate = DisclosedElement & {
   /**
@@ -853,27 +935,48 @@ const collectElements = (issuerSigned: IssuerSigned, deviceNamespaces?: DeviceNa
  *
  * A doc request that is not satisfied is a `FAILED` check; over-disclosure and documents that were
  * never requested are reported as `WARNING`, as they are the mdoc's doing and it is up to the
- * verifier whether to accept the response anyway.
+ * verifier whether to accept the response anyway. When the doc requests are matched as alternatives,
+ * a single check is reported instead, which only fails when none of them is satisfied.
  *
- * The match is attached to the per doc request checks as their structured `result`, so that it
- * survives a callback that throws on a `FAILED` check instead of collecting them.
+ * The match is attached to the doc request checks as their structured `result`, so that it survives
+ * a callback that throws on a `FAILED` check instead of collecting them.
  */
 export const reportDeviceRequestMatch = (match: DeviceRequestMatchResult, onCheck: VerificationCallback) => {
   const result = { type: 'deviceRequestMatch', match } as const
 
-  for (const docRequest of match.docRequests) {
-    const check = `Device response must satisfy doc request ${docRequest.docRequestIndex} for docType '${docRequest.docType}'`
+  if (match.docRequestsAsAlternatives) {
+    const check = `Device response must satisfy at least one of the alternative doc requests ${match.docRequests
+      .map((docRequest) => `${docRequest.docRequestIndex} for docType '${docRequest.docType}'`)
+      .join(', ')}`
 
-    if (docRequest.success) {
+    if (match.success) {
       onCheck({ status: 'PASSED', check, category: 'DOCUMENT_FORMAT', result })
     } else {
       onCheck({
         status: 'FAILED',
         check,
         category: 'DOCUMENT_FORMAT',
-        reason: docRequestFailureReason(docRequest),
+        reason: match.docRequests
+          .map((docRequest) => `Doc request ${docRequest.docRequestIndex}: ${docRequestFailureReason(docRequest)}`)
+          .join('. '),
         result,
       })
+    }
+  } else {
+    for (const docRequest of match.docRequests) {
+      const check = `Device response must satisfy doc request ${docRequest.docRequestIndex} for docType '${docRequest.docType}'`
+
+      if (docRequest.success) {
+        onCheck({ status: 'PASSED', check, category: 'DOCUMENT_FORMAT', result })
+      } else {
+        onCheck({
+          status: 'FAILED',
+          check,
+          category: 'DOCUMENT_FORMAT',
+          reason: docRequestFailureReason(docRequest),
+          result,
+        })
+      }
     }
   }
 
