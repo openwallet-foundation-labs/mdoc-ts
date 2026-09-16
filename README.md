@@ -1,3 +1,8 @@
+# ⚠️ MOVED
+The mDoc library has **moved** to the [Identity Common](https://github.com/openwallet-foundation-labs/identity-common-ts/tree/main/packages/mdoc) repository. This repository will not see updates anymore. The package is still published under [@owf/mdoc](https://www.npmjs.com/package/@owf/mdoc).
+
+---
+
 <h1 align="center" ><b>mDOC and mDL - TypeScript</b></h1>
 
 [ISO 18013-5](https://www.iso.org/standard/69084.html) defines mDL (mobile Driver’s Licenses): an ISO standard for digital driver licenses.
